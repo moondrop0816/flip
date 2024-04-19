@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# Summery : branch 이름을 검사하고, branch명에서 github issue 번호를 추출하여 commit message에 추가합니다.
+
+BRANCH_NAME=$(git symbolic-ref --short HEAD)
+ISSUE_NUMBER_IN_BRANCH_NAME=$(echo $BRANCH_NAME | sed -n 's/^.*#\([0-9]*\)$/\1/p')
+COMMIT_MSG_FILE=$1
+COMMIT_MSG_HEAD=$(head -n1 $COMMIT_MSG_FILE)
+COMMIT_MSG_BODY=$(tail -n+2 $COMMIT_MSG_FILE)
+
+# Error 1 : branch이름이 main 혹은 dev가 아닌데, github issue 번호가 없다면 에러를 출력하고 종료합니다.
+if [[ $BRANCH_NAME != "main" && $BRANCH_NAME != "dev" && $BRANCH_NAME != "deploy" && -z $ISSUE_NUMBER_IN_BRANCH_NAME ]]; then
+  echo "ERROR: Branch name must be 'main' or 'dev' or 'branch-name-#<issue number>'"
+  exit 1
+fi
+
+# Error 2 : 만약 Commit 전체 내용 중에 "#<number>"가 있다면 에러를 출력하고 종료합니다.
+if [[ $(grep -c '#[0-9]' $COMMIT_MSG_FILE) -gt 0 ]]; then
+  echo "ERROR: Commit message cannot contain '#<number>'"
+  exit 1
+fi
+
+# Success : commit message에 github issue 번호를 추가합니다.
+echo "$COMMIT_MSG_HEAD #${ISSUE_NUMBER_IN_BRANCH_NAME}" > $COMMIT_MSG_FILE
+if [[ -n $COMMIT_MSG_BODY ]]; then
+  echo "$COMMIT_MSG_BODY" >> $COMMIT_MSG_FILE
+fi
