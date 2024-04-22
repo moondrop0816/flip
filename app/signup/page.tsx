@@ -1,6 +1,6 @@
 'use client'
 
-import { useForm, SubmitHandler, FieldErrors } from 'react-hook-form'
+import { useForm, SubmitHandler } from 'react-hook-form'
 
 interface UserInfo {
   email: string
@@ -15,16 +15,12 @@ const SignUp = () => {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<UserInfo>()
-
-  console.log(errors)
+    getValues,
+  } = useForm<UserInfo>({ mode: 'onChange' })
 
   const onSubmit: SubmitHandler<UserInfo> = (data) => {
+    console.log('success')
     console.log(data)
-  }
-
-  const onError = (err: FieldErrors) => {
-    console.log(err)
   }
 
   return (
@@ -32,7 +28,7 @@ const SignUp = () => {
       <h1>Flip</h1>
       <div>프로필 이미지 영역</div>
       <button type='button'>프로필 이미지 추가버튼</button>
-      <form onSubmit={handleSubmit(onSubmit, onError)}>
+      <form onSubmit={handleSubmit(onSubmit)}>
         <div>
           <label htmlFor='email'>이메일</label>
           <input
@@ -51,8 +47,7 @@ const SignUp = () => {
             })}
           />
           <button type='button'>중복 확인</button>
-          <p>이미 사용중인 이메일입니다.</p>
-          <p>사용 가능한 이메일입니다.</p>
+          {errors.email && <p>{errors.email.message}</p>}
         </div>
         <div>
           <label htmlFor='password'>비밀번호</label>
@@ -65,24 +60,20 @@ const SignUp = () => {
                 value: true,
                 message: '비밀번호를 입력해 주세요.',
               },
-              minLength: {
-                value: 10,
-                message:
-                  '10자 이상의 영문 대/소문자, 숫자, 특수문자를 사용해 주세요.',
-              },
               maxLength: 100,
               pattern: {
-                value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*d|(?=.*[W_]))[A-Za-zdW_]*$/,
+                value: /^(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[!@#$%^&*?_]).{8,}$/,
                 message:
-                  '10자 이상의 영문 대/소문자, 숫자, 특수문자를 사용해 주세요.',
+                  '8자 이상의 영문 대/소문자, 숫자, 특수문자를 사용해 주세요.',
               },
             })}
           />
+          {errors.password && <p>{errors.password.message}</p>}
         </div>
         <div>
           <label htmlFor='passwordCheck'>비밀번호 확인</label>
           <input
-            type='text'
+            type='password'
             id='passwordCheck'
             placeholder='●●●●●●●●'
             {...register('passwordCheck', {
@@ -90,9 +81,16 @@ const SignUp = () => {
                 value: true,
                 message: '비밀번호 확인을 입력해 주세요.',
               },
+              validate: {
+                matchPassword: (value) => {
+                  const { password } = getValues()
+                  console.log('password', password)
+                  return password === value || '비밀번호가 일치하지 않습니다.'
+                },
+              },
             })}
           />
-          <p>비밀번호가 일치하지 않습니다.</p>
+          {errors.passwordCheck && <p>{errors.passwordCheck?.message}</p>}
         </div>
         <div>
           <label htmlFor='nickname'>닉네임</label>
@@ -112,6 +110,7 @@ const SignUp = () => {
               maxLength: 200,
             })}
           />
+          {errors.nickname && <p>{errors.nickname?.message}</p>}
         </div>
         <div>
           <label htmlFor='bio'>자기소개</label>
@@ -127,6 +126,7 @@ const SignUp = () => {
               maxLength: 200,
             })}
           />
+          {errors.bio && <p>{errors.bio?.message}</p>}
         </div>
         <button type='submit'>가입하기</button>
       </form>
