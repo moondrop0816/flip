@@ -2,8 +2,9 @@
 
 import { useForm, SubmitHandler } from 'react-hook-form'
 import { createUserWithEmailAndPassword } from 'firebase/auth'
-import { auth, db } from '@/firebase/firebase'
+import { auth, db, storage } from '@/firebase/firebase'
 import { collection, setDoc, doc } from 'firebase/firestore'
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { useState } from 'react'
 
 interface UserInfo {
@@ -23,14 +24,27 @@ const SignUp = () => {
     getValues,
   } = useForm<UserInfo>({ mode: 'onChange' })
 
-  const [imgSrc, setImgSrc] = useState('./next.svg')
+  const [imgPreview, setImgPreview] = useState('./next.svg')
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+
+  const imageUpload = async (userId: string) => {
+    if (selectedFile) {
+      const imageRef = ref(storage, `${userId}/${selectedFile.name}`)
+      await uploadBytes(imageRef, selectedFile)
+
+      const downloadURL = await getDownloadURL(imageRef)
+      console.log(downloadURL)
+      return downloadURL
+    }
+  }
 
   const fileChange = (fileBlob: File) => {
     const reader = new FileReader()
     reader.readAsDataURL(fileBlob)
+    setSelectedFile(fileBlob)
     return new Promise((resolve) => {
       reader.onload = () => {
-        setImgSrc(reader.result as string)
+        setImgPreview(reader.result as string)
         resolve(null)
       }
     })
@@ -45,6 +59,7 @@ const SignUp = () => {
         data.password
       )
       const uid = credential.user.uid
+      const profileImgUrl = await imageUpload(uid)
       const collectionRef = collection(db, 'user')
       const userDoc = doc(collectionRef, uid)
       await setDoc(userDoc, {
@@ -53,6 +68,7 @@ const SignUp = () => {
         nickname: data.nickname,
         bio: data.bio,
         createdAt: Date.now(),
+        profileImg: profileImgUrl,
       })
     } catch (error) {
       console.log(error)
@@ -64,7 +80,7 @@ const SignUp = () => {
       <h1>Flip</h1>
       <form onSubmit={handleSubmit(onSubmit)}>
         <div>
-          <img src={imgSrc} alt='프로필 이미지' />
+          <img src={imgPreview} alt='프로필 이미지' />
           <input
             type='file'
             accept='image/*'
