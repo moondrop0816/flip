@@ -1,6 +1,9 @@
 'use client'
 
 import { useForm, SubmitHandler } from 'react-hook-form'
+import { createUserWithEmailAndPassword } from 'firebase/auth'
+import { auth } from '@/firebase/firebase'
+import { useState } from 'react'
 
 interface UserInfo {
   email: string
@@ -8,6 +11,7 @@ interface UserInfo {
   passwordCheck: string
   nickname: string
   bio: string
+  profileImg: string
 }
 
 const SignUp = () => {
@@ -18,9 +22,29 @@ const SignUp = () => {
     getValues,
   } = useForm<UserInfo>({ mode: 'onChange' })
 
+  const [imgSrc, setImgSrc] = useState('./next.svg')
+
+  const fileChange = (fileBlob: File) => {
+    const reader = new FileReader()
+    reader.readAsDataURL(fileBlob)
+    return new Promise((resolve) => {
+      reader.onload = () => {
+        setImgSrc(reader.result as string)
+        resolve(null)
+      }
+    })
+  }
+
   const onSubmit: SubmitHandler<UserInfo> = (data) => {
-    console.log('success')
-    console.log(data)
+    event?.preventDefault()
+    createUserWithEmailAndPassword(auth, data.email, data.password)
+      .then((useCredential) => {
+        console.log(useCredential)
+        // 회원가입이 되면 생성된 정보로 유저 테이블에 정보 덮어쓰기
+        // 닉네임, 프로필이미지 변경
+        // 바이오는 유저 테이블에 추가
+      })
+      .catch((err) => console.log(err))
   }
 
   return (
@@ -29,6 +53,18 @@ const SignUp = () => {
       <div>프로필 이미지 영역</div>
       <button type='button'>프로필 이미지 추가버튼</button>
       <form onSubmit={handleSubmit(onSubmit)}>
+        <div>
+          <img src={imgSrc} alt='프로필 이미지' />
+          <input
+            type='file'
+            accept='image/*'
+            onChange={(e) =>
+              e.target.files && e.target.files.length > 0
+                ? fileChange(e.target.files[0])
+                : null
+            }
+          />
+        </div>
         <div>
           <label htmlFor='email'>이메일</label>
           <input
@@ -84,7 +120,6 @@ const SignUp = () => {
               validate: {
                 matchPassword: (value) => {
                   const { password } = getValues()
-                  console.log('password', password)
                   return password === value || '비밀번호가 일치하지 않습니다.'
                 },
               },
