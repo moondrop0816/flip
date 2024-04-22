@@ -2,7 +2,8 @@
 
 import { useForm, SubmitHandler } from 'react-hook-form'
 import { createUserWithEmailAndPassword } from 'firebase/auth'
-import { auth } from '@/firebase/firebase'
+import { auth, db } from '@/firebase/firebase'
+import { collection, setDoc, doc } from 'firebase/firestore'
 import { useState } from 'react'
 
 interface UserInfo {
@@ -35,23 +36,32 @@ const SignUp = () => {
     })
   }
 
-  const onSubmit: SubmitHandler<UserInfo> = (data) => {
+  const onSubmit: SubmitHandler<UserInfo> = async (data) => {
     event?.preventDefault()
-    createUserWithEmailAndPassword(auth, data.email, data.password)
-      .then((useCredential) => {
-        console.log(useCredential)
-        // 회원가입이 되면 생성된 정보로 유저 테이블에 정보 덮어쓰기
-        // 닉네임, 프로필이미지 변경
-        // 바이오는 유저 테이블에 추가
+    try {
+      const credential = await createUserWithEmailAndPassword(
+        auth,
+        data.email,
+        data.password
+      )
+      const uid = credential.user.uid
+      const collectionRef = collection(db, 'user')
+      const userDoc = doc(collectionRef, uid)
+      await setDoc(userDoc, {
+        id: uid,
+        email: data.email,
+        nickname: data.nickname,
+        bio: data.bio,
+        createdAt: Date.now(),
       })
-      .catch((err) => console.log(err))
+    } catch (error) {
+      console.log(error)
+    }
   }
 
   return (
     <section>
       <h1>Flip</h1>
-      <div>프로필 이미지 영역</div>
-      <button type='button'>프로필 이미지 추가버튼</button>
       <form onSubmit={handleSubmit(onSubmit)}>
         <div>
           <img src={imgSrc} alt='프로필 이미지' />
