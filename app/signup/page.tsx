@@ -84,27 +84,23 @@ const SignUp = () => {
 
   const onSubmit: SubmitHandler<UserInfo> = async (data) => {
     event?.preventDefault()
-    try {
-      const credential = await createUserWithEmailAndPassword(
-        auth,
-        data.email,
-        data.password
-      )
-      const uid = credential.user.uid
-      const profileImgUrl = await imageUpload(uid)
-      const userDB = collection(db, 'user')
-      const userDoc = doc(userDB, uid)
-      await setDoc(userDoc, {
-        id: uid,
-        email: data.email,
-        nickname: data.nickname,
-        bio: data.bio,
-        createdAt: Date.now(),
-        profileImg: profileImgUrl,
-      })
-    } catch (error) {
-
-    }
+    const credential = await createUserWithEmailAndPassword(
+      auth,
+      data.email,
+      data.password
+    )
+    const uid = credential.user.uid
+    const profileImgUrl = await imageUpload(uid)
+    const userDB = collection(db, 'user')
+    const userDoc = doc(userDB, uid)
+    await setDoc(userDoc, {
+      id: uid,
+      email: data.email,
+      nickname: data.nickname,
+      bio: data.bio,
+      createdAt: Date.now(),
+      profileImg: profileImgUrl,
+    })
   }
 
   return (
