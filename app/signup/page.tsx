@@ -103,28 +103,7 @@ const SignUp = () => {
         profileImg: profileImgUrl,
       })
     } catch (error) {
-      // TODO : 에러처리
-      // 인증 삭제
-      // 프로필 이미지 삭세
-      // 유저 문서 삭제
-      // if (error instanceof Error) {
-      //   switch (
-      //     error.code
-      //   ) {
-      //     case 'auth/invalid-email':
-      //       alert('올바른 이메일 형식이 아닙니다.')
-      //       break
-      //     case 'auth/weak-password':
-      //       alert('비밀번호가 너무 쉬워요.')
-      //       break
-      //     case 'auth/email-already-in-use':
-      //       alert('등록된 이메일 입니다.')
-      //       break
-      //     default:
-      //       alert('회원가입에 실패했습니다. 잠시 후 다시 시도해 주세요.')
-      //       break
-      //   }
-      // }
+
     }
   }
 
