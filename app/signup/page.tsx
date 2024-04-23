@@ -45,7 +45,9 @@ const SignUp = () => {
       return downloadURL
     } else {
       // 기본 프로필 이미지 주소 리턴
-      const defaultURL = await getDownloadURL(ref(storage, './defaultProfile'))
+      const defaultURL = await getDownloadURL(
+        ref(storage, '/defaultProfile.png')
+      )
       return defaultURL
     }
   }
@@ -101,6 +103,7 @@ const SignUp = () => {
       createdAt: Date.now(),
       profileImg: profileImgUrl,
     })
+    alert('가입성공')
   }
 
   return (
