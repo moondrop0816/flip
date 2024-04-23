@@ -35,16 +35,18 @@ const SignUp = () => {
 
   const [imgPreview, setImgPreview] = useState('./next.svg')
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const userDB = collection(db, 'user')
 
   const imageUpload = async (userId: string) => {
     if (selectedFile) {
+      // 선택한 프로필 이미지가 있으면
       const imageRef = ref(storage, `${userId}/${selectedFile.name}`)
       await uploadBytes(imageRef, selectedFile)
-
       const downloadURL = await getDownloadURL(imageRef)
-      console.log(downloadURL)
       return downloadURL
+    } else {
+      // 기본 프로필 이미지 주소 리턴
+      const defaultURL = await getDownloadURL(ref(storage, './defaultProfile'))
+      return defaultURL
     }
   }
 
@@ -90,7 +92,7 @@ const SignUp = () => {
       )
       const uid = credential.user.uid
       const profileImgUrl = await imageUpload(uid)
-
+      const userDB = collection(db, 'user')
       const userDoc = doc(userDB, uid)
       await setDoc(userDoc, {
         id: uid,
@@ -101,9 +103,27 @@ const SignUp = () => {
         profileImg: profileImgUrl,
       })
     } catch (error) {
-      // 에러처리하고 이메일 중복확인 로직 짜기
-      // 둘 중 하나만 통과할경우
-      console.log(error)
+      // 인증 삭제
+      // 프로필 이미지 삭세
+      // 유저 문서 삭제
+      if (error instanceof Error) {
+        switch (
+          error.code // TODO : 에러처리
+        ) {
+          case 'auth/invalid-email':
+            alert('올바른 이메일 형식이 아닙니다.')
+            break
+          case 'auth/weak-password':
+            alert('비밀번호가 너무 쉬워요.')
+            break
+          case 'auth/email-already-in-use':
+            alert('등록된 이메일 입니다.')
+            break
+          default:
+            alert('회원가입에 실패했습니다. 잠시 후 다시 시도해 주세요.')
+            break
+        }
+      }
     }
   }
 
