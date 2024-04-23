@@ -13,15 +13,7 @@ import {
 } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { useState } from 'react'
-
-interface UserInfo {
-  email: string
-  password: string
-  passwordCheck: string
-  nickname: string
-  bio: string
-  profileImg: string
-}
+import { UserInfo } from '../../types/user'
 
 const SignUp = () => {
   const {
