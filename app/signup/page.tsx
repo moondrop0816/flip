@@ -3,7 +3,14 @@
 import { useForm, SubmitHandler } from 'react-hook-form'
 import { createUserWithEmailAndPassword } from 'firebase/auth'
 import { auth, db, storage } from '@/firebase/firebase'
-import { collection, setDoc, doc } from 'firebase/firestore'
+import {
+  collection,
+  setDoc,
+  doc,
+  where,
+  query,
+  getDocs,
+} from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { useState } from 'react'
 
@@ -22,10 +29,13 @@ const SignUp = () => {
     handleSubmit,
     formState: { errors },
     getValues,
+    setValue,
+    getFieldState,
   } = useForm<UserInfo>({ mode: 'onChange' })
 
   const [imgPreview, setImgPreview] = useState('./next.svg')
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const userDB = collection(db, 'user')
 
   const imageUpload = async (userId: string) => {
     if (selectedFile) {
@@ -50,6 +60,26 @@ const SignUp = () => {
     })
   }
 
+  const emailCheck = async () => {
+    const email = getValues('email')
+    // 이메일이 유효성 검증을 통과했을때만 중복 검사 실행
+    if (!getFieldState('email').invalid) {
+      const q = query(collection(db, 'user'), where('email', '==', email))
+      const querySnapshot = await getDocs(q)
+      const result: string[] = []
+      querySnapshot.forEach((doc) => {
+        result.push(doc.data().email)
+      })
+      // 중복된 이메일이 있다면
+      if (result && result.length > 0) {
+        alert('이미 사용중인 메일입니다.')
+        setValue('email', '')
+      } else {
+        alert('사용 가능한 메일입니다.')
+      }
+    }
+  }
+
   const onSubmit: SubmitHandler<UserInfo> = async (data) => {
     event?.preventDefault()
     try {
@@ -60,8 +90,8 @@ const SignUp = () => {
       )
       const uid = credential.user.uid
       const profileImgUrl = await imageUpload(uid)
-      const collectionRef = collection(db, 'user')
-      const userDoc = doc(collectionRef, uid)
+
+      const userDoc = doc(userDB, uid)
       await setDoc(userDoc, {
         id: uid,
         email: data.email,
@@ -71,6 +101,8 @@ const SignUp = () => {
         profileImg: profileImgUrl,
       })
     } catch (error) {
+      // 에러처리하고 이메일 중복확인 로직 짜기
+      // 둘 중 하나만 통과할경우
       console.log(error)
     }
   }
@@ -103,12 +135,19 @@ const SignUp = () => {
                 message: '이메일을 입력해 주세요.',
               },
               pattern: {
-                value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+.[a-zA-Z]{2,}$/,
+                value:
+                  /^(([^<>()\[\].,;:\s@"]+(\.[^<>()\[\].,;:\s@"]+)*)|(".+"))@(([^<>()[\].,;:\s@"]+\.)+[^<>()[\].,;:\s@"]{2,})$/i,
                 message: '올바른 이메일 형식이 아닙니다.',
               },
             })}
           />
-          <button type='button'>중복 확인</button>
+          <button
+            type='button'
+            onClick={emailCheck}
+            disabled={getFieldState('email').invalid}
+          >
+            중복 확인
+          </button>
           {errors.email && <p>{errors.email.message}</p>}
         </div>
         <div>
