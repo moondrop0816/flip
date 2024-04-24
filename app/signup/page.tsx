@@ -96,7 +96,6 @@ const SignUp = () => {
       profileImg: profileImgUrl,
     })
     alert('가입성공')
-
   }
 
   return (
