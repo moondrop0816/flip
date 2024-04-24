@@ -5,6 +5,7 @@ export interface UserInfo {
   nickname: string
   bio: string
   profileImg: string
+  createdAt: string
 }
 
 export type LoginInfo = Pick<UserInfo, 'email' | 'password'>
