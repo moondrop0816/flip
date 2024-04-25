@@ -5,20 +5,58 @@ import { LoginInfo } from '../../types/user'
 import { auth } from '@/firebase/firebase'
 import { signInWithEmailAndPassword } from 'firebase/auth'
 import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form'
+import { Input } from '@/components/ui/input'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+
+const formSchema = z.object({
+  email: z
+    .string({
+      required_error: '이메일을 입력해 주세요.',
+    })
+    .regex(
+      /^(([^<>()\[\].,;:\s@"]+(\.[^<>()\[\].,;:\s@"]+)*)|(".+"))@(([^<>()[\].,;:\s@"]+\.)+[^<>()[\].,;:\s@"]{2,})$/i,
+      {
+        message: '올바른 이메일 형식이 아닙니다.',
+      }
+    ),
+  password: z
+    .string({
+      required_error: '비밀번호를 입력해 주세요.',
+    })
+    .min(8, {
+      message: '8자 이상의 영문 대/소문자, 숫자, 특수문자를 사용해 주세요.',
+    })
+    .max(100)
+    .regex(/^(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[!@#$%^&*?_]).{8,}$/, {
+      message: '8자 이상의 영문 대/소문자, 숫자, 특수문자를 사용해 주세요.',
+    }),
+})
 
 const Login = () => {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    getValues,
-  } = useForm<LoginInfo>()
+  const form = useForm<z.infer<typeof formSchema>>({
+    mode: 'onBlur',
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  })
   const router = useRouter()
 
   const onLogin: SubmitHandler<LoginInfo> = async () => {
     console.log('login')
     event?.preventDefault()
-    const [email, password] = getValues(['email', 'password'])
+    const [email, password] = form.getValues(['email', 'password'])
     await signInWithEmailAndPassword(auth, email, password)
       .then((userCredential) => {
         // Signed in
@@ -37,47 +75,50 @@ const Login = () => {
   }
 
   return (
-    <div>
-      <h1>로고</h1>
-      <form onSubmit={handleSubmit(onLogin)}>
-        <div>
-          <label htmlFor='email'>이메일</label>
-          <input
-            type='email'
-            id='email'
-            placeholder='example@naver.com'
-            {...register('email', {
-              required: {
-                value: true,
-                message: '이메일을 입력해 주세요.',
-              },
-              pattern: {
-                value:
-                  /^(([^<>()\[\].,;:\s@"]+(\.[^<>()\[\].,;:\s@"]+)*)|(".+"))@(([^<>()[\].,;:\s@"]+\.)+[^<>()[\].,;:\s@"]{2,})$/i,
-                message: '올바른 이메일 형식이 아닙니다.',
-              },
-            })}
-          />
-          {errors.email && <p>{errors.email.message}</p>}
-        </div>
-        <div>
-          <label htmlFor='password'>비밀번호</label>
-          <input
-            type='password'
-            id='password'
-            placeholder='●●●●●●●●'
-            {...register('password', {
-              required: {
-                value: true,
-                message: '비밀번호를 입력해 주세요.',
-              },
-            })}
-          />
-          {errors.password && <p>{errors.password.message}</p>}
-        </div>
-        <button type='submit'>로그인</button>
-      </form>
-    </div>
+    <section className='py-16'>
+      <h1 className='text-4xl font-bold text-center mb-10'>Flip</h1>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onLogin)}>
+          <div className='mb-2'>
+            <FormField
+              control={form.control}
+              name='email'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>이메일</FormLabel>
+                  <FormControl>
+                    <Input
+                      type='email'
+                      placeholder='example@naver.com'
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          <div className='mb-10'>
+            <FormField
+              control={form.control}
+              name='password'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>비밀번호</FormLabel>
+                  <FormControl>
+                    <Input type='password' placeholder='●●●●●●●●' {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          <Button type='submit' className='w-full text-lg h-12'>
+            로그인
+          </Button>
+        </form>
+      </Form>
+    </section>
   )
 }
 
