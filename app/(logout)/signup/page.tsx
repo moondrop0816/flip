@@ -27,6 +27,7 @@ import { Input } from '@/components/ui/input'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import Icon from '@/components/icon'
+import { useRouter } from 'next/navigation'
 
 const formSchema = z
   .object({
@@ -98,7 +99,7 @@ const SignUp = () => {
       bio: '',
     },
   })
-
+  const router = useRouter()
   const [imgPreview, setImgPreview] = useState('./defaultProfile.png')
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
@@ -130,22 +131,21 @@ const SignUp = () => {
     })
   }
 
-  const emailCheck = async () => {
-    const email = form.getValues('email')
-    // 이메일이 유효성 검증을 통과했을때만 중복 검사 실행
-    if (!form.getFieldState('email').invalid) {
-      const q = query(collection(db, 'user'), where('email', '==', email))
+  const duplicateCheck = async (type: 'email' | 'userId') => {
+    const value = form.getValues(type)
+    const label = type === 'email' ? '이메일' : '아이디'
+    // 유효성 검증을 통과했을때만 중복 검사 실행
+    if (!form.getFieldState(type).invalid) {
+      const q = query(collection(db, 'user'), where(type, '==', value))
       const querySnapshot = await getDocs(q)
-      const result: string[] = []
-      querySnapshot.forEach((doc) => {
-        result.push(doc.data().email)
-      })
-      // 중복된 이메일이 있다면
-      if (result && result.length > 0) {
-        alert('이미 사용중인 메일입니다.')
-        form.setValue('email', '')
+      const data = querySnapshot.docs.map((doc) => doc.data())[0]
+
+      // 중복된 값이 있다면
+      if (data) {
+        alert(`이미 사용중인 ${label} 입니다.`)
+        form.setValue(type, '')
       } else {
-        alert('사용 가능한 메일입니다.')
+        alert(`사용 가능한 ${label} 입니다.`)
       }
     }
   }
@@ -159,7 +159,7 @@ const SignUp = () => {
       data.password
     )
     const uid = credential.user.uid
-    const profileImgUrl = await imageUpload(uid)
+    const profileImgUrl = await imageUpload(data.userId)
     const userDB = collection(db, 'user')
     const userDoc = doc(userDB, uid)
     await setDoc(userDoc, {
@@ -172,6 +172,7 @@ const SignUp = () => {
       profileImg: profileImgUrl,
     })
     alert('가입성공')
+    router.push('/')
   }
 
   return (
@@ -210,7 +211,7 @@ const SignUp = () => {
                     </FormControl>
                     <Button
                       type='button'
-                      onClick={emailCheck}
+                      onClick={() => duplicateCheck('userId')}
                       disabled={
                         !form.getFieldState('userId').isDirty ||
                         form.getFieldState('userId').invalid
@@ -241,7 +242,7 @@ const SignUp = () => {
                     </FormControl>
                     <Button
                       type='button'
-                      onClick={emailCheck}
+                      onClick={() => duplicateCheck('email')}
                       disabled={
                         !form.getFieldState('email').isDirty ||
                         form.getFieldState('email').invalid
