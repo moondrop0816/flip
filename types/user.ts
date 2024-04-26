@@ -4,8 +4,8 @@ export interface UserInfo {
   passwordCheck: string
   nickname: string
   bio: string
-  profileImg: string
-  createdAt: string
+  profileImg?: string
+  createdAt?: string
 }
 
 export type LoginInfo = Pick<UserInfo, 'email' | 'password'>
