@@ -30,6 +30,18 @@ import Icon from '@/components/icon'
 
 const formSchema = z
   .object({
+    userId: z
+      .string({
+        required_error: '아이디를 입력해 주세요.',
+      })
+      .min(4, {
+        message:
+          '4자 ~ 16자 이상의 영문 소문자, 숫자, 밑줄(_)을 사용해 주세요.',
+      })
+      .max(16)
+      .regex(/^[a-z0-9_]{4,16}$/, {
+        message: '올바른 아이디 형식이 아닙니다.',
+      }),
     email: z
       .string({
         required_error: '이메일을 입력해 주세요.',
@@ -78,6 +90,7 @@ const SignUp = () => {
     mode: 'onBlur',
     resolver: zodResolver(formSchema),
     defaultValues: {
+      userId: '',
       email: '',
       password: '',
       passwordCheck: '',
@@ -140,7 +153,6 @@ const SignUp = () => {
   const onSubmit: SubmitHandler<UserInfo> = async (
     data: z.infer<typeof formSchema>
   ) => {
-    event?.preventDefault()
     const credential = await createUserWithEmailAndPassword(
       auth,
       data.email,
@@ -151,7 +163,8 @@ const SignUp = () => {
     const userDB = collection(db, 'user')
     const userDoc = doc(userDB, uid)
     await setDoc(userDoc, {
-      id: uid,
+      uid: uid,
+      userId: data.userId,
       email: data.email,
       nickname: data.nickname,
       bio: data.bio,
@@ -183,6 +196,33 @@ const SignUp = () => {
                 }
               />
             </label>
+          </div>
+          <div className='mb-2'>
+            <FormField
+              control={form.control}
+              name='userId'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>아이디</FormLabel>
+                  <div className='flex gap-2'>
+                    <FormControl>
+                      <Input type='text' placeholder='userId' {...field} />
+                    </FormControl>
+                    <Button
+                      type='button'
+                      onClick={emailCheck}
+                      disabled={
+                        !form.getFieldState('userId').isDirty ||
+                        form.getFieldState('userId').invalid
+                      }
+                    >
+                      중복 확인
+                    </Button>
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
           <div className='mb-2'>
             <FormField
