@@ -13,7 +13,7 @@ import {
 } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { useState } from 'react'
-import { UserInfo } from '../../types/user'
+import { UserInfo } from '@/types/user'
 import { Button } from '@/components/ui/button'
 import {
   Form,

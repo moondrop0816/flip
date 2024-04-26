@@ -1,7 +1,7 @@
 'use client'
 
 import { useForm, SubmitHandler } from 'react-hook-form'
-import { LoginInfo } from '../../types/user'
+import { LoginInfo } from '../../../types/user'
 import { auth } from '@/firebase/firebase'
 import { signInWithEmailAndPassword } from 'firebase/auth'
 import { useRouter } from 'next/navigation'

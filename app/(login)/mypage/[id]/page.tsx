@@ -1,6 +1,6 @@
 import { db } from '@/firebase/firebase'
 import { collection, getDocs, query, where } from 'firebase/firestore'
-import { UserInfo } from '../../../types/user'
+import { UserInfo } from '@/types/user'
 import { Button } from '@/components/ui/button'
 import Icon from '@/components/icon'
 
