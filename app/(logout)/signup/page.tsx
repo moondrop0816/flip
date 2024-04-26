@@ -158,7 +158,20 @@ const SignUp = () => {
       data.email,
       data.password
     )
-    const uid = credential.user.uid
+      .then((credential) => credential)
+      .catch((error) => {
+        switch (error.code) {
+          case 'auth/invalid-email':
+            alert('올바른 이메일 형식이 아닙니다.')
+            break
+          case 'auth/weak-password':
+            alert('비밀번호가 너무 쉬워요.')
+            break
+          default:
+            alert('회원가입에 실패했습니다. 잠시 후 다시 시도해 주세요.')
+        }
+      })
+    const uid = credential?.user.uid
     const profileImgUrl = await imageUpload(data.userId)
     const userDB = collection(db, 'user')
     const userDoc = doc(userDB, uid)
