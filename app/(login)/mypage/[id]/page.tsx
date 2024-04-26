@@ -1,28 +1,29 @@
 import { db } from '@/firebase/firebase'
 import { collection, getDocs, query, where } from 'firebase/firestore'
-import { UserInfo } from '@/types/user'
+import { MypageInfo } from '@/types/user'
 import { Button } from '@/components/ui/button'
 import Icon from '@/components/icon'
 
-const getUserInfo = async (id: string) => {
-  const q = query(collection(db, 'user'), where('id', '==', id))
+const getUserInfo = async (userId: string) => {
+  const q = query(collection(db, 'user'), where('userId', '==', userId))
   const querySnapshot = await getDocs(q)
   const data = querySnapshot.docs.map((doc) => doc.data())[0]
-  const userInfo: UserInfo = {
-    email: data.email,
-    password: data.password,
-    passwordCheck: data.passwordCheck,
+  const userInfo: MypageInfo = {
+    userId: data.userId,
     nickname: data.nickname,
     bio: data.bio,
     profileImg: data.profileImg,
-    createdAt: data.createdAt,
   }
 
   return userInfo
 }
 
-const MyPage = async ({ params: { id } }: { params: { id: string } }) => {
-  const userInfo = await getUserInfo(id)
+const MyPage = async ({
+  params: { userId },
+}: {
+  params: { userId: string }
+}) => {
+  const userInfo = await getUserInfo(userId)
 
   return (
     <section>
@@ -40,7 +41,7 @@ const MyPage = async ({ params: { id } }: { params: { id: string } }) => {
           </div>
         </div>
         <p className='text-lg font-bold'>{userInfo.nickname}</p>
-        <p className='text-gray-500 mb-2'>{userInfo.email}</p>
+        <p className='text-gray-500 mb-2'>{`@${userInfo.userId}`}</p>
         <p>{userInfo.bio}</p>
       </div>
     </section>

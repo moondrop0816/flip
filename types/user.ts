@@ -10,3 +10,7 @@ export interface UserInfo {
 }
 
 export type LoginInfo = Pick<UserInfo, 'email' | 'password'>
+export type MypageInfo = Pick<
+  UserInfo,
+  'userId' | 'nickname' | 'bio' | 'profileImg'
+>
