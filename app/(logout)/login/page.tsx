@@ -3,7 +3,7 @@
 import { useForm, SubmitHandler } from 'react-hook-form'
 import { LoginInfo } from '../../../types/user'
 import { auth } from '@/firebase/firebase'
-import { signInWithEmailAndPassword } from 'firebase/auth'
+import { onAuthStateChanged, signInWithEmailAndPassword } from 'firebase/auth'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import {
@@ -17,6 +17,9 @@ import {
 import { Input } from '@/components/ui/input'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { useEffect } from 'react'
+import Link from 'next/link'
+import withAuth from '@/components/hocs/withAuth'
 
 const formSchema = z.object({
   email: z
@@ -29,17 +32,9 @@ const formSchema = z.object({
         message: '올바른 이메일 형식이 아닙니다.',
       }
     ),
-  password: z
-    .string({
-      required_error: '비밀번호를 입력해 주세요.',
-    })
-    .min(8, {
-      message: '8자 이상의 영문 대/소문자, 숫자, 특수문자를 사용해 주세요.',
-    })
-    .max(100)
-    .regex(/^(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[!@#$%^&*?_]).{8,}$/, {
-      message: '8자 이상의 영문 대/소문자, 숫자, 특수문자를 사용해 주세요.',
-    }),
+  password: z.string({
+    required_error: '비밀번호를 입력해 주세요.',
+  }),
 })
 
 const Login = () => {
@@ -54,25 +49,32 @@ const Login = () => {
   const router = useRouter()
 
   const onLogin: SubmitHandler<LoginInfo> = async () => {
-    console.log('login')
-    event?.preventDefault()
     const [email, password] = form.getValues(['email', 'password'])
     await signInWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
-        // Signed in
-        // const user = userCredential.user
-        // console.log(user)
+      .then(async () => {
         alert('로그인 성공')
         router.push('/')
       })
       .catch((error) => {
-        const errorCode = error.code
-        const errorMessage = error.message
-        console.log(errorCode)
-        console.log(errorMessage)
-        alert('로그인 실패')
+        switch (error.code) {
+          case 'auth/user-not-found' || 'auth/wrong-password':
+            alert('이메일 혹은 비밀번호가 일치하지 않습니다.')
+            break
+          case 'auth/network-request-failed':
+            alert('네트워크 연결에 실패 하였습니다.')
+            break
+          case 'auth/internal-error':
+            alert('잘못된 요청입니다.')
+            break
+          default:
+            alert('로그인에 실패 하였습니다.')
+        }
       })
   }
+
+  useEffect(() => {
+    onAuthStateChanged(auth, async (user) => (user ? router.push('/') : null))
+  }, [])
 
   return (
     <section className='py-16'>
@@ -118,8 +120,14 @@ const Login = () => {
           </Button>
         </form>
       </Form>
+      <Link
+        href={'/signup'}
+        className='h-12 mt-5 inline-block flex justify-center'
+      >
+        회원가입
+      </Link>
     </section>
   )
 }
 
-export default Login
+export default withAuth(Login)

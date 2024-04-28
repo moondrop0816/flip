@@ -1,7 +1,10 @@
 'use client'
 
 import { useForm, SubmitHandler } from 'react-hook-form'
-import { createUserWithEmailAndPassword } from 'firebase/auth'
+import {
+  createUserWithEmailAndPassword,
+  onAuthStateChanged,
+} from 'firebase/auth'
 import { auth, db, storage } from '@/firebase/firebase'
 import {
   collection,
@@ -12,7 +15,7 @@ import {
   getDocs,
 } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { UserInfo } from '@/types/user'
 import { Button } from '@/components/ui/button'
 import {
@@ -27,9 +30,23 @@ import { Input } from '@/components/ui/input'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import Icon from '@/components/icon'
+import { useRouter } from 'next/navigation'
+import withAuth from '@/components/hocs/withAuth'
 
 const formSchema = z
   .object({
+    userId: z
+      .string({
+        required_error: '아이디를 입력해 주세요.',
+      })
+      .min(4, {
+        message:
+          '4자 ~ 16자 이상의 영문 소문자, 숫자, 밑줄(_)을 사용해 주세요.',
+      })
+      .max(16)
+      .regex(/^[a-z0-9_]{4,16}$/, {
+        message: '올바른 아이디 형식이 아닙니다.',
+      }),
     email: z
       .string({
         required_error: '이메일을 입력해 주세요.',
@@ -78,6 +95,7 @@ const SignUp = () => {
     mode: 'onBlur',
     resolver: zodResolver(formSchema),
     defaultValues: {
+      userId: '',
       email: '',
       password: '',
       passwordCheck: '',
@@ -85,7 +103,7 @@ const SignUp = () => {
       bio: '',
     },
   })
-
+  const router = useRouter()
   const [imgPreview, setImgPreview] = useState('./defaultProfile.png')
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
@@ -117,22 +135,21 @@ const SignUp = () => {
     })
   }
 
-  const emailCheck = async () => {
-    const email = form.getValues('email')
-    // 이메일이 유효성 검증을 통과했을때만 중복 검사 실행
-    if (!form.getFieldState('email').invalid) {
-      const q = query(collection(db, 'user'), where('email', '==', email))
+  const duplicateCheck = async (type: 'email' | 'userId') => {
+    const value = form.getValues(type)
+    const label = type === 'email' ? '이메일' : '아이디'
+    // 유효성 검증을 통과했을때만 중복 검사 실행
+    if (!form.getFieldState(type).invalid) {
+      const q = query(collection(db, 'user'), where(type, '==', value))
       const querySnapshot = await getDocs(q)
-      const result: string[] = []
-      querySnapshot.forEach((doc) => {
-        result.push(doc.data().email)
-      })
-      // 중복된 이메일이 있다면
-      if (result && result.length > 0) {
-        alert('이미 사용중인 메일입니다.')
-        form.setValue('email', '')
+      const data = querySnapshot.docs.map((doc) => doc.data())[0]
+
+      // 중복된 값이 있다면
+      if (data) {
+        alert(`이미 사용중인 ${label} 입니다.`)
+        form.setValue(type, '')
       } else {
-        alert('사용 가능한 메일입니다.')
+        alert(`사용 가능한 ${label} 입니다.`)
       }
     }
   }
@@ -140,18 +157,18 @@ const SignUp = () => {
   const onSubmit: SubmitHandler<UserInfo> = async (
     data: z.infer<typeof formSchema>
   ) => {
-    event?.preventDefault()
     const credential = await createUserWithEmailAndPassword(
       auth,
       data.email,
       data.password
     )
     const uid = credential.user.uid
-    const profileImgUrl = await imageUpload(uid)
+    const profileImgUrl = await imageUpload(data.userId)
     const userDB = collection(db, 'user')
     const userDoc = doc(userDB, uid)
     await setDoc(userDoc, {
-      id: uid,
+      uid: uid,
+      userId: data.userId,
       email: data.email,
       nickname: data.nickname,
       bio: data.bio,
@@ -159,7 +176,12 @@ const SignUp = () => {
       profileImg: profileImgUrl,
     })
     alert('가입성공')
+    router.push('/')
   }
+
+  useEffect(() => {
+    onAuthStateChanged(auth, async (user) => (user ? router.push('/') : null))
+  }, [])
 
   return (
     <section className='py-16'>
@@ -187,6 +209,33 @@ const SignUp = () => {
           <div className='mb-2'>
             <FormField
               control={form.control}
+              name='userId'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>아이디</FormLabel>
+                  <div className='flex gap-2'>
+                    <FormControl>
+                      <Input type='text' placeholder='userId' {...field} />
+                    </FormControl>
+                    <Button
+                      type='button'
+                      onClick={() => duplicateCheck('userId')}
+                      disabled={
+                        !form.getFieldState('userId').isDirty ||
+                        form.getFieldState('userId').invalid
+                      }
+                    >
+                      중복 확인
+                    </Button>
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          <div className='mb-2'>
+            <FormField
+              control={form.control}
               name='email'
               render={({ field }) => (
                 <FormItem>
@@ -201,7 +250,7 @@ const SignUp = () => {
                     </FormControl>
                     <Button
                       type='button'
-                      onClick={emailCheck}
+                      onClick={() => duplicateCheck('email')}
                       disabled={
                         !form.getFieldState('email').isDirty ||
                         form.getFieldState('email').invalid
@@ -299,4 +348,4 @@ const SignUp = () => {
   )
 }
 
-export default SignUp
+export default withAuth(SignUp)
