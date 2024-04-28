@@ -1,7 +1,10 @@
 'use client'
 
 import { useForm, SubmitHandler } from 'react-hook-form'
-import { createUserWithEmailAndPassword } from 'firebase/auth'
+import {
+  createUserWithEmailAndPassword,
+  onAuthStateChanged,
+} from 'firebase/auth'
 import { auth, db, storage } from '@/firebase/firebase'
 import {
   collection,
@@ -12,7 +15,7 @@ import {
   getDocs,
 } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { UserInfo } from '@/types/user'
 import { Button } from '@/components/ui/button'
 import {
@@ -28,6 +31,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import Icon from '@/components/icon'
 import { useRouter } from 'next/navigation'
+import withAuth from '@/components/hocs/withAuth'
 
 const formSchema = z
   .object({
@@ -158,20 +162,7 @@ const SignUp = () => {
       data.email,
       data.password
     )
-      .then((credential) => credential)
-      .catch((error) => {
-        switch (error.code) {
-          case 'auth/invalid-email':
-            alert('올바른 이메일 형식이 아닙니다.')
-            break
-          case 'auth/weak-password':
-            alert('비밀번호가 너무 쉬워요.')
-            break
-          default:
-            alert('회원가입에 실패했습니다. 잠시 후 다시 시도해 주세요.')
-        }
-      })
-    const uid = credential?.user.uid
+    const uid = credential.user.uid
     const profileImgUrl = await imageUpload(data.userId)
     const userDB = collection(db, 'user')
     const userDoc = doc(userDB, uid)
@@ -187,6 +178,10 @@ const SignUp = () => {
     alert('가입성공')
     router.push('/')
   }
+
+  useEffect(() => {
+    onAuthStateChanged(auth, async (user) => (user ? router.push('/') : null))
+  }, [])
 
   return (
     <section className='py-16'>
@@ -353,4 +348,4 @@ const SignUp = () => {
   )
 }
 
-export default SignUp
+export default withAuth(SignUp)
