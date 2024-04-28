@@ -4,12 +4,15 @@ import Link from 'next/link'
 import { Button } from '../ui/button'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
 import { auth, db } from '@/firebase/firebase'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { collection, getDocs, query, where } from 'firebase/firestore'
-import { UserInfo } from '@/types/user'
 
 const Header = () => {
+  const [loginUser, setLoginUser] = useState({
+    userId: '',
+    profileImg: './defaultProfile.png',
+  })
   const router = useRouter()
   const userCheck = () => {
     onAuthStateChanged(auth, async (user) => {
@@ -18,23 +21,16 @@ const Header = () => {
         const q = query(collection(db, 'user'), where('uid', '==', uid))
         const querySnapshot = await getDocs(q)
         const data = querySnapshot.docs.map((doc) => doc.data())[0]
-        if (!localStorage.getItem('currentUser')) {
-          localStorage.setItem('currentUser', JSON.stringify(data))
-        }
+        setLoginUser({ userId: data.userId, profileImg: data.profileImg })
       } else {
-        // User is signed out
-        localStorage.removeItem('currentUser')
+        setLoginUser({ userId: '', profileImg: './defaultProfile.png' })
         router.push('/login')
       }
     })
   }
 
-  const currentUser = localStorage.getItem('currentUser') || ''
-  const currentData: UserInfo = JSON.parse(currentUser)
-
   const onLogout = async () => {
     await signOut(auth)
-    localStorage.removeItem('currentUser')
   }
 
   useEffect(() => {
@@ -45,9 +41,9 @@ const Header = () => {
     <header className='bg-slate-300 shadow-md flex flex-wrap justify-between items-center px-5 py-3 sticky'>
       <div className='basis-1/3 text-left'>
         <div className='rounded-full overflow-hidden w-10'>
-          {currentData && (
-            <img src={currentData.profileImg} alt='프로필 이미지' />
-          )}
+          <Link href={`/mypage/${loginUser.userId}`}>
+            <img src={loginUser.profileImg} alt='프로필 이미지' />
+          </Link>
         </div>
       </div>
       <div className='basis-1/3 text-center'>
@@ -56,7 +52,7 @@ const Header = () => {
         </Link>
       </div>
       <div className='basis-1/3 self-end text-right'>
-        {currentData ? (
+        {loginUser.userId ? (
           <Button variant={'ghost'} onClick={onLogout}>
             <Link href={'/login'}>로그아웃</Link>
           </Button>
