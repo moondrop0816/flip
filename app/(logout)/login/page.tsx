@@ -117,6 +117,7 @@ const Login = () => {
       </Form>
       <Link
         href={'/signup'}
+        scroll={false}
         className='h-12 mt-5 inline-block flex justify-center'
       >
         회원가입
