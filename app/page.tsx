@@ -23,8 +23,8 @@ function Home() {
           content: doc.data().content,
           commentCount: doc.data().commentCount,
           likeCount: doc.data().likeCount,
-          createdAt: doc.data().createdAt,
-          updatedAt: doc.data().updatedAt,
+          createdAt: doc.data().createdAt.toDate(),
+          updatedAt: doc.data().updatedAt.toDate(),
           imageUrl: doc.data().imageUrl,
         },
       }))
