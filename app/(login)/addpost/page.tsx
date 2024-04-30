@@ -14,8 +14,15 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import { auth, db, storage } from '@/firebase/firebase'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { addDoc, collection, getDocs, query, where } from 'firebase/firestore'
-import { ref, uploadBytes } from 'firebase/storage'
+import {
+  collection,
+  doc,
+  getDocs,
+  query,
+  setDoc,
+  where,
+} from 'firebase/firestore'
+import { getDownloadURL, ref, uploadBytes } from 'firebase/storage'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -60,21 +67,28 @@ const AddPostPage = () => {
       const querySnapshot = await getDocs(q)
       const userData = querySnapshot.docs.map((doc) => doc.data())[0]
       const feedDB = collection(db, 'feed')
-
-      const docRef = await addDoc(feedDB, {
+      const postData = {
         userId: userData.userId,
         content: data.content,
         commentCount: 0,
         likeCount: 0,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      })
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        imageUrl: '',
+      }
+
+      // 자동 생성 id로 문서 생성
+      const postRef = doc(feedDB)
 
       // 이미지 첨부를 했다면
       if (selectedFile) {
-        const imageRef = ref(storage, `${userData.userId}/${docRef.id}`)
+        const imageRef = ref(storage, `${userData.userId}/${postRef.id}`)
         await uploadBytes(imageRef, selectedFile)
+        const downloadURL = await getDownloadURL(imageRef)
+        postData.imageUrl = downloadURL
       }
+
+      await setDoc(postRef, postData)
 
       router.push('/')
     } catch (error) {
