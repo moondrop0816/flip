@@ -169,7 +169,7 @@ const SignUp = () => {
       email: data.email,
       nickname: data.nickname,
       bio: data.bio,
-      createdAt: Date.now(),
+      createdAt: new Date(),
       profileImg: profileImgUrl,
     })
     alert('가입성공')
