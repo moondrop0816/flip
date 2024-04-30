@@ -20,14 +20,16 @@ import { auth, db } from '@/firebase/firebase'
 import { useEffect, useState } from 'react'
 import { PostInfo } from '@/types/user'
 import { getDate } from '@/utils/postUtil'
+import { useRouter } from 'next/navigation'
 
 const PostCard = ({ id, data }: { id: string; data: Post }) => {
   const [userInfo, setUserInfo] = useState<PostInfo>({
     userId: '',
     nickname: '',
-    profileImg: './defaultProfile.png',
+    profileImg: '',
   })
   const [loginUser, setLoginUser] = useState('')
+  const router = useRouter()
 
   const getUserInfo = async (userId: string) => {
     try {
@@ -59,8 +61,7 @@ const PostCard = ({ id, data }: { id: string; data: Post }) => {
   }, [])
 
   return (
-    // 클릭시 상세 조회로 이동하게 라우팅. /post/id 형태로 리턴해줄것
-    <Card>
+    <Card className='cursor-pointer' onClick={() => router.push(`/post/${id}`)}>
       <CardHeader className='flex flex-row justify-between'>
         <div className='flex items-center basis-[calc(100%-6rem)]'>
           <div className='w-10 h-10 rounded-full overflow-hidden'>
