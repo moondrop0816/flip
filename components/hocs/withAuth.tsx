@@ -17,18 +17,16 @@ const withAuth =
         if (user) {
           if (pathName === '/login' || pathName === '/signup') {
             router.push('/')
-            return <Component {...props} />
           }
         } else {
-          if (pathName === '/login' || pathName === '/signup') {
-            return <Component {...props} />
-          } else {
+          if (pathName !== '/login' && pathName !== '/signup') {
             router.push('/login')
-            return <Component {...props} />
           }
         }
       })
     }, [])
+
+    return <Component {...props} />
   }
 
 export default withAuth
