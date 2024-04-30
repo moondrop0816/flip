@@ -1,9 +1,17 @@
 import Link from 'next/link'
 import Icon from '../icon'
 
-const Footer = () => {
+const Footer = ({ isAddible = false }) => {
   return (
     <footer className='bg-slate-300 fixed w-screen bottom-0'>
+      {isAddible ? (
+        <Link
+          href={'/addpost'}
+          className='flex justify-center p-5 bg-slate-600 rounded-full absolute bottom-[130%] right-5'
+        >
+          <Icon name='Pencil' color='#fff' />
+        </Link>
+      ) : null}
       <nav>
         <ul className='flex flex-wrap items-center'>
           <li className='basis-1/4 '>
