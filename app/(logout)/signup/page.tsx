@@ -1,10 +1,7 @@
 'use client'
 
 import { useForm, SubmitHandler } from 'react-hook-form'
-import {
-  createUserWithEmailAndPassword,
-  onAuthStateChanged,
-} from 'firebase/auth'
+import { createUserWithEmailAndPassword } from 'firebase/auth'
 import { auth, db, storage } from '@/firebase/firebase'
 import {
   collection,
@@ -15,7 +12,7 @@ import {
   getDocs,
 } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { UserInfo } from '@/types/user'
 import { Button } from '@/components/ui/button'
 import {
@@ -178,10 +175,6 @@ const SignUp = () => {
     alert('가입성공')
     router.push('/')
   }
-
-  useEffect(() => {
-    onAuthStateChanged(auth, async (user) => (user ? router.push('/') : null))
-  }, [])
 
   return (
     <section className='py-16'>
