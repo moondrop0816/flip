@@ -15,12 +15,20 @@ import {
 } from '@/components/ui/dropdown-menu'
 import Icon from '../icon'
 import { Post } from '@/types/post'
-import { collection, getDocs, query, where } from 'firebase/firestore'
-import { auth, db } from '@/firebase/firebase'
+import {
+  collection,
+  deleteDoc,
+  doc,
+  getDocs,
+  query,
+  where,
+} from 'firebase/firestore'
+import { auth, db, storage } from '@/firebase/firebase'
 import { useEffect, useState } from 'react'
 import { PostInfo } from '@/types/user'
 import { getDate } from '@/utils/postUtil'
 import { useRouter } from 'next/navigation'
+import { deleteObject, ref } from 'firebase/storage'
 
 const PostCard = ({ id, data }: { id: string; data: Post }) => {
   const [userInfo, setUserInfo] = useState<PostInfo>({
@@ -55,13 +63,28 @@ const PostCard = ({ id, data }: { id: string; data: Post }) => {
     setLoginUser(userData.userId)
   }
 
+  const onPostDelete = async () => {
+    try {
+      console.log('글 삭제')
+      await deleteDoc(doc(db, 'feed', id))
+      // 이미지가 있다면 이미지도 삭제하기
+      if (data.imageUrl) {
+        const imageRef = ref(storage, `${data.userId}/${id}`)
+        await deleteObject(imageRef)
+      }
+      alert('게시글이 삭제되었습니다.')
+    } catch (error) {
+      console.error('삭제 에러', error)
+    }
+  }
+
   useEffect(() => {
     getUserInfo(data.userId)
     nowLoginUser()
   }, [])
 
   return (
-    <Card className='cursor-pointer' onClick={() => router.push(`/post/${id}`)}>
+    <Card>
       <CardHeader className='flex flex-row justify-between'>
         <div className='flex items-center basis-[calc(100%-6rem)]'>
           <div className='w-10 h-10 rounded-full overflow-hidden'>
@@ -80,13 +103,18 @@ const PostCard = ({ id, data }: { id: string; data: Post }) => {
               </DropdownMenuTrigger>
               <DropdownMenuContent>
                 <DropdownMenuItem>수정하기</DropdownMenuItem>
-                <DropdownMenuItem>삭제하기</DropdownMenuItem>
+                <DropdownMenuItem onClick={onPostDelete}>
+                  삭제하기
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           )}
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent
+        className='cursor-pointer'
+        onClick={() => router.push(`/post/${id}`)}
+      >
         <pre>{data.content}</pre>
         {data.imageUrl && (
           <div className='max-w-md aspect-auto mt-5'>
