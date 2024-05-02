@@ -120,21 +120,33 @@ const AddPostPage = () => {
           </FormItem>
           <FormItem className='mb-5'>
             <FormLabel className='block'>이미지 첨부(선택)</FormLabel>
-            <label className='inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 cursor-pointer gap-2'>
-              <Icon name='ImagePlus' />
-              <span>파일 첨부</span>
-              <input
-                type='file'
-                accept='image/*'
-                multiple
-                hidden
-                onChange={(e) =>
-                  e.target.files && e.target.files.length > 0
-                    ? fileChange(e.target.files[0])
-                    : null
-                }
-              />
-            </label>
+            <div className='flex justify-start items-center gap-2'>
+              <label className='inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 cursor-pointer gap-2'>
+                <Icon name='ImagePlus' />
+                <span>파일 첨부</span>
+                <input
+                  type='file'
+                  accept='image/*'
+                  multiple
+                  hidden
+                  onChange={(e) =>
+                    e.target.files && e.target.files.length > 0
+                      ? fileChange(e.target.files[0])
+                      : null
+                  }
+                />
+              </label>
+              <Button
+                type='button'
+                variant={'outline'}
+                onClick={() => {
+                  setImgPreview('')
+                  setSelectedFile(null)
+                }}
+              >
+                취소
+              </Button>
+            </div>
             <div className='w-52 h-52 rounded-lg overflow-hidden'>
               {imgPreview ? (
                 <img src={imgPreview} alt='게시글 이미지' />
@@ -146,10 +158,14 @@ const AddPostPage = () => {
             </div>
           </FormItem>
           <div className='flex justify-center gap-2'>
-            <Button variant={'outline'} onClick={() => router.back()}>
+            <Button
+              type='button'
+              variant={'outline'}
+              onClick={() => router.back()}
+            >
               취소하기
             </Button>
-            <Button>등록하기</Button>
+            <Button type='submit'>등록하기</Button>
           </div>
         </form>
       </Form>
