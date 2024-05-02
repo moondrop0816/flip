@@ -7,3 +7,8 @@ export interface Post {
   updatedAt: Date
   imageUrl: string
 }
+
+export interface InfiniteScroll {
+  dbName: string
+  limitNum: number
+}
