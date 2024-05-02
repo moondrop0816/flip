@@ -2,7 +2,6 @@
 
 import { db } from '@/firebase/firebase'
 import {
-  DocumentData,
   collection,
   getDocs,
   limit,
@@ -14,9 +13,12 @@ import { useInfiniteQuery } from '@tanstack/react-query'
 import { useBottomScrollListener } from 'react-bottom-scroll-listener'
 import { InfiniteScroll, Post } from '@/types/post'
 
-let lastVisible: number | DocumentData | undefined = undefined
-
-export const useInfiniteScroll = ({ dbName, limitNum }: InfiniteScroll) => {
+export const useInfiniteScroll = ({
+  dbName,
+  lastVisible,
+  firstLimitNum,
+  limitNum,
+}: InfiniteScroll) => {
   const getData = async () => {
     let q
     if (lastVisible === -1) {
@@ -32,7 +34,7 @@ export const useInfiniteScroll = ({ dbName, limitNum }: InfiniteScroll) => {
       q = query(
         collection(db, dbName),
         orderBy('createdAt', 'desc'),
-        limit(limitNum)
+        limit(firstLimitNum)
       )
     }
 
