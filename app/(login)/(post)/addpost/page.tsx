@@ -144,7 +144,7 @@ const AddPostPage = () => {
                   setSelectedFile(null)
                 }}
               >
-                취소
+                삭제
               </Button>
             </div>
             <div className='w-52 h-52 rounded-lg overflow-hidden'>
