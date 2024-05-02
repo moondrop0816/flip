@@ -102,7 +102,11 @@ const PostCard = ({ id, data }: { id: string; data: Post }) => {
                 <Icon name='Ellipsis' />
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuItem>수정하기</DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => router.push(`/editpost/${id}`)}
+                >
+                  수정하기
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={onPostDelete}>
                   삭제하기
                 </DropdownMenuItem>
