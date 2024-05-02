@@ -10,7 +10,8 @@
     // ESLint 구성을 확장. Next.js의 코어 웹 바이탈스 및 TypeScript 및 Prettier와 관련된 권장 규칙을 사용
     "next/core-web-vitals",
     "plugin:@typescript-eslint/recommended", // @typescript-eslint를 적용하고 recommended 규칙으로 확장.
-    "plugin:prettier/recommended" // eslint-plugin-prettier + eslint-config-prettier 동시 적용.
+    "plugin:prettier/recommended", // eslint-plugin-prettier + eslint-config-prettier 동시 적용.
+    "plugin:@tanstack/eslint-plugin-query/recommended" // tanstack query plugin
   ],
   "rules": {
     // ESLint 규칙을 설정
