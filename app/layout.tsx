@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import '../styles/globals.css'
+import ReactQueryProviders from '@/hooks/useReactQuery'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -16,7 +17,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang='ko'>
-      <body className={`${inter.className} h-screen`}>{children}</body>
+      <body className={`${inter.className} h-screen`}>
+        <ReactQueryProviders>{children}</ReactQueryProviders>
+      </body>
     </html>
   )
 }
