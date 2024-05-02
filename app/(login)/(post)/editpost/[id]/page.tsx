@@ -12,19 +12,18 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Textarea } from '@/components/ui/textarea'
-import { auth, db, storage } from '@/firebase/firebase'
+import { db, storage } from '@/firebase/firebase'
+import { Post } from '@/types/post'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { doc, getDoc, updateDoc } from 'firebase/firestore'
 import {
-  collection,
-  doc,
-  getDocs,
-  query,
-  setDoc,
-  where,
-} from 'firebase/firestore'
-import { getDownloadURL, ref, uploadBytes } from 'firebase/storage'
-import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+  deleteObject,
+  getDownloadURL,
+  ref,
+  uploadBytes,
+} from 'firebase/storage'
+import { usePathname, useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
@@ -34,7 +33,10 @@ const formSchema = z.object({
   }),
 })
 
-const AddPostPage = () => {
+const EditPostPage = () => {
+  const path = usePathname()
+  const postId = path.split('/')[path.split('/').length - 1]
+
   const form = useForm<z.infer<typeof formSchema>>({
     mode: 'onBlur',
     resolver: zodResolver(formSchema),
@@ -44,8 +46,9 @@ const AddPostPage = () => {
   })
 
   const router = useRouter()
-  const [imgPreview, setImgPreview] = useState('')
+  const [imgPreview, setImgPreview] = useState('') // TODO: 이미지 가져와서 세팅하기
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [prevData, setPrevData] = useState<Post | null>(null)
 
   const fileChange = (fileBlob: File) => {
     const reader = new FileReader()
@@ -59,47 +62,68 @@ const AddPostPage = () => {
     })
   }
 
-  const onAddPost = async (data: z.infer<typeof formSchema>) => {
+  const getPostInfo = async (postId: string) => {
+    const docRef = doc(db, 'feed', postId)
+    const docSnap = await getDoc(docRef)
+    const data: Post = {
+      userId: docSnap.data()?.userId,
+      content: docSnap.data()?.content,
+      commentCount: docSnap.data()?.commentCount,
+      likeCount: docSnap.data()?.likeCount,
+      createdAt: docSnap.data()?.createdAt.toDate(),
+      updatedAt: docSnap.data()?.updatedAt.toDate(),
+      imageUrl: docSnap.data()?.imageUrl,
+    }
+
+    setPrevData(data)
+    if (data.imageUrl) {
+      setImgPreview(data.imageUrl)
+    }
+  }
+
+  const onEditPost = async (data: z.infer<typeof formSchema>) => {
     try {
-      // * TODO: 유저 정보 가져오는 부분 util로 빼서 리팩토링 하기
-      const uid = auth.currentUser?.uid
-      const q = query(collection(db, 'user'), where('uid', '==', uid))
-      const querySnapshot = await getDocs(q)
-      const userData = querySnapshot.docs.map((doc) => doc.data())[0]
-      const feedDB = collection(db, 'feed')
-      const postData = {
-        userId: userData.userId,
+      const docRef = doc(db, 'feed', postId)
+      const updateData: {
+        content: string
+        updatedAt: Date
+        imageUrl?: string
+      } = {
         content: data.content,
-        commentCount: 0,
-        likeCount: 0,
-        createdAt: new Date(),
         updatedAt: new Date(),
-        imageUrl: '',
       }
 
-      // 자동 생성 id로 문서 생성
-      const postRef = doc(feedDB)
-
-      // 이미지 첨부를 했다면
+      // 이미지가 새로 변경되었다면
       if (selectedFile) {
-        const imageRef = ref(storage, `${userData.userId}/${postRef.id}`)
+        const imageRef = ref(storage, `${prevData?.userId}/${postId}`)
         await uploadBytes(imageRef, selectedFile)
         const downloadURL = await getDownloadURL(imageRef)
-        postData.imageUrl = downloadURL
+        updateData['imageUrl'] = downloadURL
       }
 
-      await setDoc(postRef, postData)
+      // 기존 이미지가 삭제되었다면
+      if (!imgPreview && !selectedFile) {
+        updateData['imageUrl'] = ''
+        const imageRef = ref(storage, `${prevData?.userId}/${postId}`)
+        await deleteObject(imageRef)
+      }
 
-      router.push('/')
+      await updateDoc(docRef, updateData)
+      alert('게시글이 수정되었습니다.')
+      router.push(`/post/${postId}`)
     } catch (error) {
       console.log(error)
     }
   }
 
+  useEffect(() => {
+    getPostInfo(postId)
+  }, [])
+
   return (
     <section className='pt-5'>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onAddPost)}>
+        <form onSubmit={form.handleSubmit(onEditPost)}>
           <FormItem className='mb-5'>
             <FormField
               control={form.control}
@@ -110,6 +134,7 @@ const AddPostPage = () => {
                     <Textarea
                       placeholder='내용을 입력해 주세요.'
                       className='resize-none h-52'
+                      defaultValue={prevData?.content}
                       {...field}
                     />
                   </FormControl>
@@ -165,7 +190,7 @@ const AddPostPage = () => {
             >
               취소하기
             </Button>
-            <Button type='submit'>등록하기</Button>
+            <Button type='submit'>수정하기</Button>
           </div>
         </form>
       </Form>
@@ -173,4 +198,4 @@ const AddPostPage = () => {
   )
 }
 
-export default withAuth(AddPostPage)
+export default withAuth(EditPostPage)
