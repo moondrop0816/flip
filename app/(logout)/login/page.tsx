@@ -3,7 +3,7 @@
 import { useForm, SubmitHandler } from 'react-hook-form'
 import { LoginInfo } from '../../../types/user'
 import { auth } from '@/firebase/firebase'
-import { onAuthStateChanged, signInWithEmailAndPassword } from 'firebase/auth'
+import { signInWithEmailAndPassword } from 'firebase/auth'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import {
@@ -17,7 +17,6 @@ import {
 import { Input } from '@/components/ui/input'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useEffect } from 'react'
 import Link from 'next/link'
 import withAuth from '@/components/hocs/withAuth'
 
@@ -72,10 +71,6 @@ const Login = () => {
       })
   }
 
-  useEffect(() => {
-    onAuthStateChanged(auth, async (user) => (user ? router.push('/') : null))
-  }, [])
-
   return (
     <section className='py-16'>
       <h1 className='text-4xl font-bold text-center mb-10'>Flip</h1>
@@ -122,6 +117,7 @@ const Login = () => {
       </Form>
       <Link
         href={'/signup'}
+        scroll={false}
         className='h-12 mt-5 inline-block flex justify-center'
       >
         회원가입

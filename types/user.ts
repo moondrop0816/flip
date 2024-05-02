@@ -14,3 +14,4 @@ export type MypageInfo = Pick<
   UserInfo,
   'userId' | 'nickname' | 'bio' | 'profileImg'
 >
+export type PostInfo = Pick<UserInfo, 'userId' | 'nickname' | 'profileImg'>

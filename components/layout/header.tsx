@@ -31,6 +31,7 @@ const Header = () => {
 
   const onLogout = async () => {
     await signOut(auth)
+    router.push('/login')
   }
 
   useEffect(() => {
@@ -41,20 +42,20 @@ const Header = () => {
     <header className='bg-slate-300 shadow-md flex flex-wrap justify-between items-center px-5 py-3 sticky'>
       <div className='basis-1/3 text-left'>
         <div className='rounded-full overflow-hidden w-10'>
-          <Link href={`/mypage/${loginUser.userId}`}>
+          <Link href={`/mypage/${loginUser.userId}`} scroll={false}>
             <img src={loginUser.profileImg} alt='프로필 이미지' />
           </Link>
         </div>
       </div>
       <div className='basis-1/3 text-center'>
-        <Link href={'/'}>
+        <Link href={'/'} scroll={false}>
           <h1 className='text-4xl font-bold'>Flip</h1>
         </Link>
       </div>
       <div className='basis-1/3 self-end text-right'>
         {loginUser.userId ? (
           <Button variant={'ghost'} onClick={onLogout}>
-            <Link href={'/login'}>로그아웃</Link>
+            로그아웃
           </Button>
         ) : (
           <Button variant={'ghost'}>
