@@ -1,5 +1,3 @@
-import { DocumentData } from 'firebase/firestore'
-
 export interface Post {
   userId: string
   content: string
@@ -12,7 +10,6 @@ export interface Post {
 
 export interface InfiniteScroll {
   dbName: string
-  lastVisible: number | DocumentData | undefined
   firstLimitNum: number
   limitNum: number
 }

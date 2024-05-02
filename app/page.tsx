@@ -7,14 +7,10 @@ import PostCard from '@/components/post/postCard'
 import { InfiniteScroll } from '@/types/post'
 import React from 'react'
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll'
-import { DocumentData } from 'firebase/firestore'
-
-const lastVisible: number | DocumentData | undefined = undefined
 
 function Home() {
   const feedObj: InfiniteScroll = {
     dbName: 'feed',
-    lastVisible,
     firstLimitNum: 10,
     limitNum: 5,
   }
