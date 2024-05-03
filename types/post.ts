@@ -8,12 +8,6 @@ export interface Post {
   imageUrl: string
 }
 
-export interface InfiniteScroll {
-  dbName: string
-  firstLimitNum: number
-  limitNum: number
-}
-
 export interface Comment {
   userId: string
   feedId: string
