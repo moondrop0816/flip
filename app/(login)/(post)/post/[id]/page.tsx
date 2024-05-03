@@ -30,7 +30,7 @@ const PostDetailPage = async ({
   return (
     <section>
       <PostCard id={id} data={data} />
-      <ReplyWrapper feedId={id} commentCount={data.commentCount} />
+      <ReplyWrapper feedId={id} />
     </section>
   )
 }

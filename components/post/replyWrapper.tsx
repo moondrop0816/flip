@@ -23,9 +23,15 @@ import {
   setDoc,
   orderBy,
   updateDoc,
+  getDoc,
+  limit,
+  startAfter,
+  DocumentData,
 } from 'firebase/firestore'
-import { useEffect, useState } from 'react'
 import { Comment } from '@/types/post'
+import React from 'react'
+import { useInfiniteQuery } from '@tanstack/react-query'
+import { useBottomScrollListener } from 'react-bottom-scroll-listener'
 
 const formSchema = z.object({
   content: z.string({
@@ -33,14 +39,9 @@ const formSchema = z.object({
   }),
 })
 
-const ReplyWrapper = ({
-  feedId,
-  commentCount,
-}: {
-  feedId: string
-  commentCount: number
-}) => {
-  const [comment, setComment] = useState<{ id: string; data: Comment }[]>([])
+let lastVisible: number | DocumentData | undefined = undefined
+
+const ReplyWrapper = ({ feedId }: { feedId: string }) => {
   const form = useForm<z.infer<typeof formSchema>>({
     mode: 'onBlur',
     resolver: zodResolver(formSchema),
@@ -49,24 +50,61 @@ const ReplyWrapper = ({
     },
   })
 
-  const getReplyInfo = async () => {
-    const q = query(
-      collection(db, 'comment'),
-      where('feedId', '==', feedId),
-      orderBy('createdAt', 'desc')
-    )
+  const getCommentData = async () => {
+    const commentData: { id: string; data: Comment }[] = []
+
+    let q
+    if (lastVisible === -1) {
+      return
+    } else if (lastVisible) {
+      q = query(
+        collection(db, 'comment'),
+        orderBy('createdAt', 'desc'),
+        limit(5),
+        startAfter(lastVisible)
+      )
+    } else {
+      q = query(
+        collection(db, 'comment'),
+        orderBy('createdAt', 'desc'),
+        limit(10)
+      )
+    }
+
     const querySnapshot = await getDocs(q)
-    const data = querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      data: {
-        userId: doc.data().userId,
-        content: doc.data().content,
-        createdAt: doc.data().createdAt.toDate(),
-        feedId: doc.data().feedId,
-      },
-    }))
-    setComment(data)
+    querySnapshot.forEach((doc) => {
+      commentData.push({
+        id: doc.id,
+        data: {
+          userId: doc.data().userId,
+          content: doc.data().content,
+          createdAt: doc.data().createdAt.toDate(),
+          feedId: doc.data().feedId,
+        },
+      })
+
+      if (querySnapshot.docs.length === 0) {
+        lastVisible = -1
+      } else {
+        lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1]
+      }
+    })
+
+    return commentData
   }
+
+  const { data, fetchNextPage, hasNextPage } = useInfiniteQuery({
+    queryKey: ['commentData'],
+    queryFn: getCommentData,
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, allPages) => {
+      return lastPage && lastPage.length !== 0 ? allPages.length + 1 : null
+    },
+  })
+
+  useBottomScrollListener(() => {
+    fetchNextPage()
+  })
 
   const onAddReply = async (data: z.infer<typeof formSchema>) => {
     try {
@@ -88,7 +126,10 @@ const ReplyWrapper = ({
 
       // 피드 문서 업데이트
       const feedRef = doc(db, 'feed', feedId)
-      await updateDoc(feedRef, { commentCount: commentCount + 1 })
+      const feedSnap = await getDoc(feedRef)
+      await updateDoc(feedRef, {
+        commentCount: feedSnap.data()?.commentCount + 1,
+      })
 
       await setDoc(commentRef, commentData)
     } catch (error) {
@@ -96,16 +137,21 @@ const ReplyWrapper = ({
     }
   }
 
-  useEffect(() => {
-    getReplyInfo()
-  }, [])
-
   return (
     <section>
       <div className='mb-5'>
-        {comment.map((reply) => {
-          return <Reply key={reply.id} id={reply.id} data={reply.data} />
-        })}
+        {data?.pages.map((page, pageIndex) => (
+          <React.Fragment key={pageIndex}>
+            {page?.map((feedData) => (
+              <Reply key={feedData.id} id={feedData.id} data={feedData.data} />
+            ))}
+          </React.Fragment>
+        ))}
+        {!hasNextPage && (
+          <div className='p-6 pb-0 text-center text-slate-400'>
+            마지막 댓글입니다.
+          </div>
+        )}
       </div>
       <Form {...form}>
         <form className='flex gap-2' onSubmit={form.handleSubmit(onAddReply)}>
