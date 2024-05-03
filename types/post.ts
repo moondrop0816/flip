@@ -13,3 +13,10 @@ export interface InfiniteScroll {
   firstLimitNum: number
   limitNum: number
 }
+
+export interface Comment {
+  userId: string
+  feedId: string
+  createdAt: Date
+  content: string
+}
