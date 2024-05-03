@@ -9,7 +9,7 @@ export default function LoginLayout({
   return (
     <>
       <Header />
-      <div className='container'>{children}</div>
+      <div className='container pt-8 pb-24'>{children}</div>
       <Footer />
     </>
   )
