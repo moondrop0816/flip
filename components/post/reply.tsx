@@ -3,8 +3,16 @@
 import { Comment } from '@/types/post'
 import { getDate } from '@/utils/postUtil'
 import { db, auth } from '@/firebase/firebase'
-import { query, collection, where, getDocs } from 'firebase/firestore'
-import { useEffect, useState } from 'react'
+import {
+  query,
+  collection,
+  where,
+  getDocs,
+  doc,
+  updateDoc,
+  deleteDoc,
+} from 'firebase/firestore'
+import { useEffect, useRef, useState } from 'react'
 import { PostInfo } from '@/types/user'
 import {
   DropdownMenu,
@@ -13,6 +21,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import Icon from '../icon'
+import { Textarea } from '../ui/textarea'
+import { Button } from '../ui/button'
 
 const Reply = ({ id, data }: { id: string; data: Comment }) => {
   const [userInfo, setUserInfo] = useState<PostInfo>({
@@ -21,6 +31,8 @@ const Reply = ({ id, data }: { id: string; data: Comment }) => {
     profileImg: '',
   })
   const [loginUser, setLoginUser] = useState('')
+  const [isEdit, setIsEdit] = useState(false)
+  const content = useRef<HTMLTextAreaElement>(null)
 
   const getUserInfo = async (userId: string) => {
     try {
@@ -44,6 +56,24 @@ const Reply = ({ id, data }: { id: string; data: Comment }) => {
     const querySnapshot = await getDocs(q)
     const userData = querySnapshot.docs.map((doc) => doc.data())[0]
     setLoginUser(userData.userId)
+  }
+
+  const onCommentEdit = async () => {
+    // 변경사항이 없을때는 요청 보내지 않게 하기
+    if (data.content === content.current?.value) {
+      setIsEdit(false)
+      return
+    }
+
+    if (content.current?.value !== '') {
+      const docRef = doc(db, 'comment', id)
+      await updateDoc(docRef, { content: content.current?.value })
+      setIsEdit(false)
+    }
+  }
+
+  const onCommentDelete = async () => {
+    await deleteDoc(doc(db, 'comment', id))
   }
 
   useEffect(() => {
@@ -71,8 +101,10 @@ const Reply = ({ id, data }: { id: string; data: Comment }) => {
                   <Icon name='Ellipsis' />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
-                  <DropdownMenuItem>수정하기</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => console.log('삭제')}>
+                  <DropdownMenuItem onClick={() => setIsEdit(!isEdit)}>
+                    수정하기
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={onCommentDelete}>
                     삭제하기
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -80,42 +112,24 @@ const Reply = ({ id, data }: { id: string; data: Comment }) => {
             )}
           </div>
         </div>
-        <div>
-          <pre>{data.content}</pre>
+        <div className='flex gap-2'>
+          {isEdit ? (
+            <>
+              <Textarea
+                defaultValue={data.content}
+                className='resize-none'
+                ref={content}
+              />
+              <Button type='button' className='h-auto' onClick={onCommentEdit}>
+                수정하기
+              </Button>
+            </>
+          ) : (
+            <pre>{data.content}</pre>
+          )}
         </div>
       </div>
     </div>
-    // <Card>
-    //   <CardHeader className='flex flex-row justify-between'>
-    //     <div className='flex items-center basis-[calc(100%-6rem)]'>
-    //       <div className='w-10 h-10 rounded-full overflow-hidden'>
-    //         <img src={userInfo.profileImg} alt='프로필 이미지' />
-    //       </div>
-    //       <p className='ml-2 text-lg font-medium'>{userInfo.nickname}</p>
-    //       <CardDescription className='ml-1'>
-    //         ‧ {getDate(data.createdAt)}
-    //       </CardDescription>
-    //     </div>
-    // <div className='basis-6'>
-    //   {loginUser === data.userId && (
-    //     <DropdownMenu>
-    //       <DropdownMenuTrigger>
-    //         <Icon name='Ellipsis' />
-    //       </DropdownMenuTrigger>
-    //       <DropdownMenuContent>
-    //         <DropdownMenuItem>수정하기</DropdownMenuItem>
-    //         <DropdownMenuItem onClick={() => console.log('삭제')}>
-    //           삭제하기
-    //         </DropdownMenuItem>
-    //       </DropdownMenuContent>
-    //     </DropdownMenu>
-    //   )}
-    // </div>
-    //   </CardHeader>
-    //   <CardContent>
-    //     <pre>{data.content}</pre>
-    //   </CardContent>
-    // </Card>
   )
 }
 
