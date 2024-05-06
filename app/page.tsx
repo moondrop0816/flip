@@ -5,7 +5,7 @@ import Footer from '@/components/layout/footer'
 import withAuth from '@/components/hocs/withAuth'
 import PostCard from '@/components/post/postCard'
 import { Post } from '@/types/post'
-import React from 'react'
+import React, { useEffect } from 'react'
 import {
   DocumentData,
   collection,
@@ -54,7 +54,7 @@ function Home() {
         },
       })
 
-      if (querySnapshot.docs.length === 0) {
+      if (querySnapshot.docs.length < 5) {
         lastVisible = -1
       } else {
         lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1]
@@ -77,6 +77,13 @@ function Home() {
     fetchNextPage()
   })
 
+  useEffect(() => {
+    if (lastVisible !== undefined) {
+      lastVisible = undefined
+      fetchNextPage()
+    }
+  }, [])
+
   return (
     <>
       <Header />
@@ -89,7 +96,7 @@ function Home() {
       ))}
       {!hasNextPage && (
         <div className='mb-16 p-6 pb-20 text-center text-slate-400'>
-          마지막 게시글입니다.
+          게시글이 없습니다.
         </div>
       )}
       <Footer isAddible={true} />

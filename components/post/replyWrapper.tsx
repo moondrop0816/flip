@@ -29,7 +29,7 @@ import {
   DocumentData,
 } from 'firebase/firestore'
 import { Comment } from '@/types/post'
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { useBottomScrollListener } from 'react-bottom-scroll-listener'
 
@@ -59,6 +59,7 @@ const ReplyWrapper = ({ feedId }: { feedId: string }) => {
     } else if (lastVisible) {
       q = query(
         collection(db, 'comment'),
+        where('feedId', '==', feedId),
         orderBy('createdAt', 'desc'),
         limit(5),
         startAfter(lastVisible)
@@ -66,6 +67,7 @@ const ReplyWrapper = ({ feedId }: { feedId: string }) => {
     } else {
       q = query(
         collection(db, 'comment'),
+        where('feedId', '==', feedId),
         orderBy('createdAt', 'desc'),
         limit(10)
       )
@@ -83,7 +85,7 @@ const ReplyWrapper = ({ feedId }: { feedId: string }) => {
         },
       })
 
-      if (querySnapshot.docs.length === 0) {
+      if (querySnapshot.docs.length < 5) {
         lastVisible = -1
       } else {
         lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1]
@@ -105,6 +107,13 @@ const ReplyWrapper = ({ feedId }: { feedId: string }) => {
   useBottomScrollListener(() => {
     fetchNextPage()
   })
+
+  useEffect(() => {
+    if (lastVisible !== undefined) {
+      lastVisible = undefined
+      fetchNextPage()
+    }
+  }, [])
 
   const onAddReply = async (data: z.infer<typeof formSchema>) => {
     try {
@@ -149,7 +158,7 @@ const ReplyWrapper = ({ feedId }: { feedId: string }) => {
         ))}
         {!hasNextPage && (
           <div className='p-6 pb-0 text-center text-slate-400'>
-            마지막 댓글입니다.
+            댓글이 없습니다.
           </div>
         )}
       </div>
