@@ -12,9 +12,11 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Textarea } from '@/components/ui/textarea'
+import { useFeedLastVisible } from '@/context/feedProvider'
 import { db, storage } from '@/firebase/firebase'
 import { Post } from '@/types/post'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { doc, getDoc, updateDoc } from 'firebase/firestore'
 import {
   deleteObject,
@@ -81,8 +83,10 @@ const EditPostPage = () => {
     }
   }
 
-  const onEditPost = async (data: z.infer<typeof formSchema>) => {
-    try {
+  const queryClient = useQueryClient()
+  const { setLastVisible } = useFeedLastVisible()
+  const mutatePostEdit = useMutation({
+    mutationFn: async (data: z.infer<typeof formSchema>) => {
       const docRef = doc(db, 'feed', postId)
       const updateData: {
         content: string
@@ -109,11 +113,52 @@ const EditPostPage = () => {
       }
 
       await updateDoc(docRef, updateData)
-      alert('게시글이 수정되었습니다.')
       router.push(`/post/${postId}`)
-    } catch (error) {
-      console.log(error)
-    }
+    },
+    onMutate: () => {
+      setLastVisible(undefined)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['feedData'],
+      })
+    },
+  })
+
+  const onEditPost = async (data: z.infer<typeof formSchema>) => {
+    mutatePostEdit.mutate(data)
+    // try {
+    //   const docRef = doc(db, 'feed', postId)
+    //   const updateData: {
+    //     content: string
+    //     updatedAt: Date
+    //     imageUrl?: string
+    //   } = {
+    //     content: data.content,
+    //     updatedAt: new Date(),
+    //   }
+
+    //   // 이미지가 새로 변경되었다면
+    //   if (selectedFile) {
+    //     const imageRef = ref(storage, `${prevData?.userId}/${postId}`)
+    //     await uploadBytes(imageRef, selectedFile)
+    //     const downloadURL = await getDownloadURL(imageRef)
+    //     updateData['imageUrl'] = downloadURL
+    //   }
+
+    //   // 기존 이미지가 삭제되었다면
+    //   if (!imgPreview && !selectedFile) {
+    //     updateData['imageUrl'] = ''
+    //     const imageRef = ref(storage, `${prevData?.userId}/${postId}`)
+    //     await deleteObject(imageRef)
+    //   }
+
+    //   await updateDoc(docRef, updateData)
+    //   alert('게시글이 수정되었습니다.')
+    //   router.push(`/post/${postId}`)
+    // } catch (error) {
+    //   console.log(error)
+    // }
   }
 
   useEffect(() => {
