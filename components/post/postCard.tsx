@@ -129,8 +129,10 @@ const PostCard = ({ id, data }: { id: string; data: Post }) => {
         </div>
       </CardHeader>
       <CardContent
-        className='cursor-pointer'
-        onClick={() => router.push(`/post/${id}`)}
+        className={pathname === '/feed' ? 'cursor-pointer' : ''}
+        onClick={() =>
+          pathname === '/feed' ? router.push(`/post/${id}`) : null
+        }
       >
         <pre>{data.content}</pre>
         {data.imageUrl && (
