@@ -52,7 +52,7 @@ const Login = () => {
     await signInWithEmailAndPassword(auth, email, password)
       .then(async () => {
         alert('로그인 성공')
-        router.push('/')
+        router.push('/feed')
       })
       .catch((error) => {
         switch (error.code) {

@@ -1,5 +1,7 @@
 import PostCard from '@/components/post/postCard'
+import ReplyWrapper from '@/components/post/replyWrapper'
 import { db } from '@/firebase/firebase'
+import { ReplyLastVisibleProvider } from '@/context/replyProvider'
 import { Post } from '@/types/post'
 import { doc, getDoc } from 'firebase/firestore'
 
@@ -29,7 +31,9 @@ const PostDetailPage = async ({
   return (
     <section>
       <PostCard id={id} data={data} />
-      <div>댓글 영역. 댓글 개별 컴포넌트를 감싸는 댓글 wrap 컴포넌트</div>
+      <ReplyLastVisibleProvider>
+        <ReplyWrapper feedId={id} />
+      </ReplyLastVisibleProvider>
     </section>
   )
 }

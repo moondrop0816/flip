@@ -12,8 +12,10 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Textarea } from '@/components/ui/textarea'
+import { useFeedLastVisible } from '@/context/feedProvider'
 import { auth, db, storage } from '@/firebase/firebase'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   collection,
   doc,
@@ -59,8 +61,10 @@ const AddPostPage = () => {
     })
   }
 
-  const onAddPost = async (data: z.infer<typeof formSchema>) => {
-    try {
+  const queryClient = useQueryClient()
+  const { setLastVisible } = useFeedLastVisible()
+  const mutatePostAdd = useMutation({
+    mutationFn: async (data: z.infer<typeof formSchema>) => {
       // * TODO: 유저 정보 가져오는 부분 util로 빼서 리팩토링 하기
       const uid = auth.currentUser?.uid
       const q = query(collection(db, 'user'), where('uid', '==', uid))
@@ -90,10 +94,20 @@ const AddPostPage = () => {
 
       await setDoc(postRef, postData)
 
-      router.push('/')
-    } catch (error) {
-      console.log(error)
-    }
+      router.push('/feed')
+    },
+    onMutate: () => {
+      setLastVisible(undefined)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['feedData'],
+      })
+    },
+  })
+
+  const onAddPost = async (data: z.infer<typeof formSchema>) => {
+    mutatePostAdd.mutate(data)
   }
 
   return (

@@ -10,9 +10,17 @@ export interface Post {
   imageUrl: string
 }
 
-export interface InfiniteScroll {
-  dbName: string
+export interface Comment {
+  userId: string
+  feedId: string
+  createdAt: Date
+  content: string
+}
+
+// 타입 정의
+export type LastVisibleContextType = {
   lastVisible: number | DocumentData | undefined
-  firstLimitNum: number
-  limitNum: number
+  setLastVisible: React.Dispatch<
+    React.SetStateAction<number | DocumentData | undefined>
+  >
 }

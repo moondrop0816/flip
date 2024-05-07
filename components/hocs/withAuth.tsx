@@ -16,7 +16,7 @@ const withAuth =
       onAuthStateChanged(auth, async (user) => {
         if (user) {
           if (pathName === '/login' || pathName === '/signup') {
-            router.push('/')
+            router.push('/feed')
           }
         } else {
           if (pathName !== '/login' && pathName !== '/signup') {

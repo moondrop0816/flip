@@ -1,7 +1,8 @@
 import Footer from '@/components/layout/footer'
 import Header from '@/components/layout/header'
+import { FeedLastVisibleProvider } from '@/context/feedProvider'
 
-export default function LoginLayout({
+export default function FeedLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
@@ -9,8 +10,8 @@ export default function LoginLayout({
   return (
     <>
       <Header />
-      <div className='container'>{children}</div>
-      <Footer />
+      <FeedLastVisibleProvider>{children}</FeedLastVisibleProvider>
+      <Footer isAddible={true} />
     </>
   )
 }

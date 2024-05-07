@@ -27,8 +27,10 @@ import { auth, db, storage } from '@/firebase/firebase'
 import { useEffect, useState } from 'react'
 import { PostInfo } from '@/types/user'
 import { getDate } from '@/utils/postUtil'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { deleteObject, ref } from 'firebase/storage'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useFeedLastVisible } from '@/context/feedProvider'
 
 const PostCard = ({ id, data }: { id: string; data: Post }) => {
   const [userInfo, setUserInfo] = useState<PostInfo>({
@@ -63,20 +65,31 @@ const PostCard = ({ id, data }: { id: string; data: Post }) => {
     setLoginUser(userData.userId)
   }
 
-  const onPostDelete = async () => {
-    try {
-      console.log('글 삭제')
+  const queryClient = useQueryClient()
+  const { setLastVisible } = useFeedLastVisible()
+  const pathname = usePathname()
+  const mutatePostDelete = useMutation({
+    mutationFn: async () => {
       await deleteDoc(doc(db, 'feed', id))
       // 이미지가 있다면 이미지도 삭제하기
       if (data.imageUrl) {
         const imageRef = ref(storage, `${data.userId}/${id}`)
         await deleteObject(imageRef)
       }
-      alert('게시글이 삭제되었습니다.')
-    } catch (error) {
-      console.error('삭제 에러', error)
-    }
-  }
+      // feed에 위치하지 않았을경우에는 리다이렉트 시키기
+      if (pathname !== '/feed') {
+        router.push('/feed')
+      }
+    },
+    onMutate: () => {
+      setLastVisible(undefined)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['feedData'],
+      })
+    },
+  })
 
   useEffect(() => {
     getUserInfo(data.userId)
@@ -107,7 +120,7 @@ const PostCard = ({ id, data }: { id: string; data: Post }) => {
                 >
                   수정하기
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={onPostDelete}>
+                <DropdownMenuItem onClick={() => mutatePostDelete.mutate()}>
                   삭제하기
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -116,8 +129,10 @@ const PostCard = ({ id, data }: { id: string; data: Post }) => {
         </div>
       </CardHeader>
       <CardContent
-        className='cursor-pointer'
-        onClick={() => router.push(`/post/${id}`)}
+        className={pathname === '/feed' ? 'cursor-pointer' : ''}
+        onClick={() =>
+          pathname === '/feed' ? router.push(`/post/${id}`) : null
+        }
       >
         <pre>{data.content}</pre>
         {data.imageUrl && (
