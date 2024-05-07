@@ -61,7 +61,7 @@ const Reply = ({ id, data }: { id: string; data: Comment }) => {
     setLoginUser(userData.userId)
   }
 
-  const { lastVisible, setLastVisible } = useReplyLastVisible()
+  const { setLastVisible } = useReplyLastVisible()
 
   const commentEdit = useMutation({
     mutationFn: async () => {
@@ -100,9 +100,23 @@ const Reply = ({ id, data }: { id: string; data: Comment }) => {
   //   }
   // }
 
-  const onCommentDelete = async () => {
-    await deleteDoc(doc(db, 'comment', id))
-  }
+  // const onCommentDelete = async () => {
+  //   await deleteDoc(doc(db, 'comment', id))
+  // }
+
+  const commentDelete = useMutation({
+    mutationFn: async () => {
+      await deleteDoc(doc(db, 'comment', id))
+    },
+    onMutate: () => {
+      setLastVisible(undefined)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['commentData'],
+      })
+    },
+  })
 
   useEffect(() => {
     getUserInfo(data.userId)
@@ -132,7 +146,7 @@ const Reply = ({ id, data }: { id: string; data: Comment }) => {
                   <DropdownMenuItem onClick={() => setIsEdit(!isEdit)}>
                     수정하기
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={onCommentDelete}>
+                  <DropdownMenuItem onClick={() => commentDelete.mutate()}>
                     삭제하기
                   </DropdownMenuItem>
                 </DropdownMenuContent>
