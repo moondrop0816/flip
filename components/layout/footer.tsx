@@ -16,7 +16,11 @@ const Footer = ({ isAddible = false }) => {
       <nav>
         <ul className='flex flex-wrap items-center'>
           <li className='basis-1/4 '>
-            <Link href={'/'} scroll={false} className='flex justify-center p-5'>
+            <Link
+              href={'/feed'}
+              scroll={false}
+              className='flex justify-center p-5'
+            >
               <Icon name='Home' />
             </Link>
           </li>

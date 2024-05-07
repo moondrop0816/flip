@@ -173,7 +173,7 @@ const SignUp = () => {
       profileImg: profileImgUrl,
     })
     alert('가입성공')
-    router.push('/')
+    router.push('/feed')
   }
 
   return (

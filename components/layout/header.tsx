@@ -48,7 +48,7 @@ const Header = () => {
         </div>
       </div>
       <div className='basis-1/3 text-center'>
-        <Link href={'/'} scroll={false}>
+        <Link href={'/feed'} scroll={false}>
           <h1 className='text-4xl font-bold'>Flip</h1>
         </Link>
       </div>
