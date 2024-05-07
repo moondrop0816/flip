@@ -90,20 +90,6 @@ const PostCard = ({ id, data }: { id: string; data: Post }) => {
       })
     },
   })
-  // const onPostDelete = async () => {
-  //   try {
-  //     console.log('글 삭제')
-  //     await deleteDoc(doc(db, 'feed', id))
-  //     // 이미지가 있다면 이미지도 삭제하기
-  //     if (data.imageUrl) {
-  //       const imageRef = ref(storage, `${data.userId}/${id}`)
-  //       await deleteObject(imageRef)
-  //     }
-  //     alert('게시글이 삭제되었습니다.')
-  //   } catch (error) {
-  //     console.error('삭제 에러', error)
-  //   }
-  // }
 
   useEffect(() => {
     getUserInfo(data.userId)

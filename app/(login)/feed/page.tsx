@@ -1,13 +1,10 @@
 'use client'
 
-import Header from '@/components/layout/header'
-import Footer from '@/components/layout/footer'
 import withAuth from '@/components/hocs/withAuth'
 import PostCard from '@/components/post/postCard'
 import { Post } from '@/types/post'
-import React, { useEffect } from 'react'
+import React from 'react'
 import {
-  DocumentData,
   collection,
   getDocs,
   limit,
@@ -19,8 +16,6 @@ import { db } from '@/firebase/firebase'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { useBottomScrollListener } from 'react-bottom-scroll-listener'
 import { useFeedLastVisible } from '@/context/feedProvider'
-
-// let lastVisible: number | DocumentData | undefined = undefined
 
 function Feed() {
   const { lastVisible, setLastVisible } = useFeedLastVisible()
@@ -57,10 +52,8 @@ function Feed() {
       })
 
       if (querySnapshot.docs.length < 5) {
-        // lastVisible = -1
         setLastVisible(-1)
       } else {
-        // lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1]
         setLastVisible(querySnapshot.docs[querySnapshot.docs.length - 1])
       }
     })
@@ -82,13 +75,6 @@ function Feed() {
       fetchNextPage()
     }
   })
-
-  // useEffect(() => {
-  //   if (lastVisible !== undefined) {
-  //     // lastVisible = undefined
-  //     fetchNextPage()
-  //   }
-  // }, [])
 
   return (
     <>

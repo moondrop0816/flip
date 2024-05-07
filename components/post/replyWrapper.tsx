@@ -26,10 +26,9 @@ import {
   getDoc,
   limit,
   startAfter,
-  DocumentData,
 } from 'firebase/firestore'
 import { Comment } from '@/types/post'
-import React, { useEffect } from 'react'
+import React from 'react'
 import {
   useInfiniteQuery,
   useMutation,
@@ -43,8 +42,6 @@ const formSchema = z.object({
     required_error: '내용을 입력해 주세요.',
   }),
 })
-
-// let lastVisible: number | DocumentData | undefined = undefined
 
 const ReplyWrapper = ({ feedId }: { feedId: string }) => {
   const form = useForm<z.infer<typeof formSchema>>({
@@ -94,14 +91,10 @@ const ReplyWrapper = ({ feedId }: { feedId: string }) => {
 
       if (querySnapshot.docs.length < 5) {
         setLastVisible(-1)
-        // lastVisible = -1
       } else {
         setLastVisible(querySnapshot.docs[querySnapshot.docs.length - 1])
-        // lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1]
       }
     })
-
-    console.log(commentData)
 
     return commentData
   }
@@ -121,49 +114,10 @@ const ReplyWrapper = ({ feedId }: { feedId: string }) => {
     }
   })
 
-  // useEffect(() => {
-  // if (lastVisible !== undefined) {
-  //   setLastVisible(undefined)
-  // fetchNextPage()
-  // }
-  // }, [lastVisible])
-
-  console.log(data?.pages)
-  console.log(data?.pageParams)
-
-  console.log('lastVisible', lastVisible)
-
   const onAddReply = async (data: z.infer<typeof formSchema>) => {
     commentAdd.mutate(data)
-    // try {
-    //   const uid = auth.currentUser?.uid
-    //   const q = query(collection(db, 'user'), where('uid', '==', uid))
-    //   const querySnapshot = await getDocs(q)
-    //   const userData = querySnapshot.docs.map((doc) => doc.data())[0]
-    //   const commentDB = collection(db, 'comment')
-    //   const commentData = {
-    //     userId: userData.userId,
-    //     feedId,
-    //     content: data.content,
-    //     createdAt: new Date(),
-    //   }
-
-    //   // 자동 생성 id로 문서 생성
-    //   const commentRef = doc(commentDB)
-    //   form.resetField('content') // 입력창 초기화
-
-    //   // 피드 문서 업데이트
-    //   const feedRef = doc(db, 'feed', feedId)
-    //   const feedSnap = await getDoc(feedRef)
-    //   await updateDoc(feedRef, {
-    //     commentCount: feedSnap.data()?.commentCount + 1,
-    //   })
-
-    //   await setDoc(commentRef, commentData)
-    // } catch (error) {
-    //   console.log(error)
-    // }
   }
+
   const queryClient = useQueryClient()
   const commentAdd = useMutation({
     mutationFn: async (data: z.infer<typeof formSchema>) => {

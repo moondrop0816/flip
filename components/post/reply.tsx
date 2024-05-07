@@ -86,23 +86,6 @@ const Reply = ({ id, data }: { id: string; data: Comment }) => {
       })
     },
   })
-  // const onCommentEdit = async () => {
-  //   // 변경사항이 없을때는 요청 보내지 않게 하기
-  //   if (data.content === content.current?.value) {
-  //     setIsEdit(false)
-  //     return
-  //   }
-
-  //   if (content.current?.value !== '') {
-  //     const docRef = doc(db, 'comment', id)
-  //     await updateDoc(docRef, { content: content.current?.value })
-  //     setIsEdit(false)
-  //   }
-  // }
-
-  // const onCommentDelete = async () => {
-  //   await deleteDoc(doc(db, 'comment', id))
-  // }
 
   const commentDelete = useMutation({
     mutationFn: async () => {
