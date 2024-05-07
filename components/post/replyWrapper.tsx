@@ -30,7 +30,11 @@ import {
 } from 'firebase/firestore'
 import { Comment } from '@/types/post'
 import React, { useEffect } from 'react'
-import { useInfiniteQuery } from '@tanstack/react-query'
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+} from '@tanstack/react-query'
 import { useBottomScrollListener } from 'react-bottom-scroll-listener'
 import { useReplyLastVisible } from '@/provider/replyProvider'
 
@@ -130,7 +134,39 @@ const ReplyWrapper = ({ feedId }: { feedId: string }) => {
   console.log('lastVisible', lastVisible)
 
   const onAddReply = async (data: z.infer<typeof formSchema>) => {
-    try {
+    commentAdd.mutate(data)
+    // try {
+    //   const uid = auth.currentUser?.uid
+    //   const q = query(collection(db, 'user'), where('uid', '==', uid))
+    //   const querySnapshot = await getDocs(q)
+    //   const userData = querySnapshot.docs.map((doc) => doc.data())[0]
+    //   const commentDB = collection(db, 'comment')
+    //   const commentData = {
+    //     userId: userData.userId,
+    //     feedId,
+    //     content: data.content,
+    //     createdAt: new Date(),
+    //   }
+
+    //   // 자동 생성 id로 문서 생성
+    //   const commentRef = doc(commentDB)
+    //   form.resetField('content') // 입력창 초기화
+
+    //   // 피드 문서 업데이트
+    //   const feedRef = doc(db, 'feed', feedId)
+    //   const feedSnap = await getDoc(feedRef)
+    //   await updateDoc(feedRef, {
+    //     commentCount: feedSnap.data()?.commentCount + 1,
+    //   })
+
+    //   await setDoc(commentRef, commentData)
+    // } catch (error) {
+    //   console.log(error)
+    // }
+  }
+  const queryClient = useQueryClient()
+  const commentAdd = useMutation({
+    mutationFn: async (data: z.infer<typeof formSchema>) => {
       const uid = auth.currentUser?.uid
       const q = query(collection(db, 'user'), where('uid', '==', uid))
       const querySnapshot = await getDocs(q)
@@ -155,10 +191,16 @@ const ReplyWrapper = ({ feedId }: { feedId: string }) => {
       })
 
       await setDoc(commentRef, commentData)
-    } catch (error) {
-      console.log(error)
-    }
-  }
+    },
+    onMutate: () => {
+      setLastVisible(undefined)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['commentData'],
+      })
+    },
+  })
 
   return (
     <section>
