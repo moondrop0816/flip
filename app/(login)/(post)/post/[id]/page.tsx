@@ -1,6 +1,7 @@
 import PostCard from '@/components/post/postCard'
 import ReplyWrapper from '@/components/post/replyWrapper'
 import { db } from '@/firebase/firebase'
+import { ReplyLastVisibleProvider } from '@/provider/replyProvider'
 import { Post } from '@/types/post'
 import { doc, getDoc } from 'firebase/firestore'
 
@@ -30,7 +31,9 @@ const PostDetailPage = async ({
   return (
     <section>
       <PostCard id={id} data={data} />
-      <ReplyWrapper feedId={id} />
+      <ReplyLastVisibleProvider>
+        <ReplyWrapper feedId={id} />
+      </ReplyLastVisibleProvider>
     </section>
   )
 }

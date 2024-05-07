@@ -1,3 +1,5 @@
+import { DocumentData } from 'firebase/firestore'
+
 export interface Post {
   userId: string
   content: string
@@ -13,4 +15,12 @@ export interface Comment {
   feedId: string
   createdAt: Date
   content: string
+}
+
+// 타입 정의
+export type LastVisibleContextType = {
+  lastVisible: number | DocumentData | undefined
+  setLastVisible: React.Dispatch<
+    React.SetStateAction<number | DocumentData | undefined>
+  >
 }
