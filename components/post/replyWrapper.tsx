@@ -36,7 +36,7 @@ import {
   useQueryClient,
 } from '@tanstack/react-query'
 import { useBottomScrollListener } from 'react-bottom-scroll-listener'
-import { useReplyLastVisible } from '@/provider/replyProvider'
+import { useReplyLastVisible } from '@/context/replyProvider'
 
 const formSchema = z.object({
   content: z.string({

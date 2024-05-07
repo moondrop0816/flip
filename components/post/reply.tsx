@@ -24,7 +24,7 @@ import Icon from '../icon'
 import { Textarea } from '../ui/textarea'
 import { Button } from '../ui/button'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useReplyLastVisible } from '@/provider/replyProvider'
+import { useReplyLastVisible } from '@/context/replyProvider'
 
 const Reply = ({ id, data }: { id: string; data: Comment }) => {
   const queryClient = useQueryClient()

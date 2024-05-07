@@ -1,7 +1,7 @@
 import PostCard from '@/components/post/postCard'
 import ReplyWrapper from '@/components/post/replyWrapper'
 import { db } from '@/firebase/firebase'
-import { ReplyLastVisibleProvider } from '@/provider/replyProvider'
+import { ReplyLastVisibleProvider } from '@/context/replyProvider'
 import { Post } from '@/types/post'
 import { doc, getDoc } from 'firebase/firestore'
 
