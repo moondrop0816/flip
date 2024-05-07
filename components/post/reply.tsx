@@ -23,8 +23,11 @@ import {
 import Icon from '../icon'
 import { Textarea } from '../ui/textarea'
 import { Button } from '../ui/button'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useReplyLastVisible } from '@/provider/replyProvider'
 
 const Reply = ({ id, data }: { id: string; data: Comment }) => {
+  const queryClient = useQueryClient()
   const [userInfo, setUserInfo] = useState<PostInfo>({
     userId: '',
     nickname: '',
@@ -58,19 +61,44 @@ const Reply = ({ id, data }: { id: string; data: Comment }) => {
     setLoginUser(userData.userId)
   }
 
-  const onCommentEdit = async () => {
-    // 변경사항이 없을때는 요청 보내지 않게 하기
-    if (data.content === content.current?.value) {
-      setIsEdit(false)
-      return
-    }
+  const { lastVisible, setLastVisible } = useReplyLastVisible()
 
-    if (content.current?.value !== '') {
-      const docRef = doc(db, 'comment', id)
-      await updateDoc(docRef, { content: content.current?.value })
-      setIsEdit(false)
-    }
-  }
+  const commentEdit = useMutation({
+    mutationFn: async () => {
+      // 변경사항이 없을때는 요청 보내지 않게 하기
+      if (data.content === content.current?.value) {
+        setIsEdit(false)
+        return
+      }
+
+      if (content.current?.value !== '') {
+        const docRef = doc(db, 'comment', id)
+        await updateDoc(docRef, { content: content.current?.value })
+        setIsEdit(false)
+      }
+    },
+    onMutate: () => {
+      setLastVisible(undefined)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['commentData'],
+      })
+    },
+  })
+  // const onCommentEdit = async () => {
+  //   // 변경사항이 없을때는 요청 보내지 않게 하기
+  //   if (data.content === content.current?.value) {
+  //     setIsEdit(false)
+  //     return
+  //   }
+
+  //   if (content.current?.value !== '') {
+  //     const docRef = doc(db, 'comment', id)
+  //     await updateDoc(docRef, { content: content.current?.value })
+  //     setIsEdit(false)
+  //   }
+  // }
 
   const onCommentDelete = async () => {
     await deleteDoc(doc(db, 'comment', id))
@@ -120,7 +148,11 @@ const Reply = ({ id, data }: { id: string; data: Comment }) => {
                 className='resize-none'
                 ref={content}
               />
-              <Button type='button' className='h-auto' onClick={onCommentEdit}>
+              <Button
+                type='button'
+                className='h-auto'
+                onClick={() => commentEdit.mutate()}
+              >
                 수정하기
               </Button>
             </>

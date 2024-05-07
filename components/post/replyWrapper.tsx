@@ -32,6 +32,7 @@ import { Comment } from '@/types/post'
 import React, { useEffect } from 'react'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { useBottomScrollListener } from 'react-bottom-scroll-listener'
+import { useReplyLastVisible } from '@/provider/replyProvider'
 
 const formSchema = z.object({
   content: z.string({
@@ -39,7 +40,7 @@ const formSchema = z.object({
   }),
 })
 
-let lastVisible: number | DocumentData | undefined = undefined
+// let lastVisible: number | DocumentData | undefined = undefined
 
 const ReplyWrapper = ({ feedId }: { feedId: string }) => {
   const form = useForm<z.infer<typeof formSchema>>({
@@ -49,6 +50,8 @@ const ReplyWrapper = ({ feedId }: { feedId: string }) => {
       content: '',
     },
   })
+
+  const { lastVisible, setLastVisible } = useReplyLastVisible()
 
   const getCommentData = async () => {
     const commentData: { id: string; data: Comment }[] = []
@@ -86,17 +89,21 @@ const ReplyWrapper = ({ feedId }: { feedId: string }) => {
       })
 
       if (querySnapshot.docs.length < 5) {
-        lastVisible = -1
+        setLastVisible(-1)
+        // lastVisible = -1
       } else {
-        lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1]
+        setLastVisible(querySnapshot.docs[querySnapshot.docs.length - 1])
+        // lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1]
       }
     })
+
+    console.log(commentData)
 
     return commentData
   }
 
   const { data, fetchNextPage, hasNextPage } = useInfiniteQuery({
-    queryKey: ['commentData'],
+    queryKey: ['commentData', feedId],
     queryFn: getCommentData,
     initialPageParam: 1,
     getNextPageParam: (lastPage, allPages) => {
@@ -105,15 +112,22 @@ const ReplyWrapper = ({ feedId }: { feedId: string }) => {
   })
 
   useBottomScrollListener(() => {
-    fetchNextPage()
-  })
-
-  useEffect(() => {
-    if (lastVisible !== undefined) {
-      lastVisible = undefined
+    if (lastVisible !== -1) {
       fetchNextPage()
     }
-  }, [])
+  })
+
+  // useEffect(() => {
+  // if (lastVisible !== undefined) {
+  //   setLastVisible(undefined)
+  // fetchNextPage()
+  // }
+  // }, [lastVisible])
+
+  console.log(data?.pages)
+  console.log(data?.pageParams)
+
+  console.log('lastVisible', lastVisible)
 
   const onAddReply = async (data: z.infer<typeof formSchema>) => {
     try {
