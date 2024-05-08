@@ -1,15 +1,25 @@
 'use client'
 
-import Header from '@/components/layout/header'
-import Footer from '@/components/layout/footer'
+import { Button } from '@/components/ui/button'
+import { useRouter } from 'next/navigation'
 
 function Home() {
+  const router = useRouter()
+
   return (
-    <>
-      <Header />
-      <div>홈</div>
-      <Footer isAddible={true} />
-    </>
+    <div className='container bg-slate-300 w-screen h-screen flex flex-col justify-center items-center'>
+      <h1 className='text-4xl font-bold text-center mb-10'>Flip</h1>
+      <Button className='w-52 mb-2' onClick={() => router.push('/login')}>
+        로그인
+      </Button>
+      <Button
+        className='w-52'
+        variant={'secondary'}
+        onClick={() => router.push('/signup')}
+      >
+        회원가입
+      </Button>
+    </div>
   )
 }
 
