@@ -19,8 +19,12 @@ import {
   collection,
   deleteDoc,
   doc,
+  getDoc,
   getDocs,
+  increment,
   query,
+  setDoc,
+  updateDoc,
   where,
 } from 'firebase/firestore'
 import { auth, db, storage } from '@/firebase/firebase'
@@ -29,7 +33,7 @@ import { PostInfo } from '@/types/user'
 import { getDate } from '@/utils/postUtil'
 import { usePathname, useRouter } from 'next/navigation'
 import { deleteObject, ref } from 'firebase/storage'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useFeedLastVisible } from '@/context/feedProvider'
 
 const PostCard = ({ id, data }: { id: string; data: Post }) => {
@@ -91,6 +95,61 @@ const PostCard = ({ id, data }: { id: string; data: Post }) => {
     },
   })
 
+  const { data: likedId } = useQuery({
+    queryKey: ['liked', id, loginUser],
+    queryFn: async () => {
+      const q = query(
+        collection(db, 'liked'),
+        where('feedId', '==', id),
+        where('userId', '==', loginUser)
+      )
+      const querySnapshot = await getDocs(q)
+      const data = querySnapshot.docs.map((doc) => doc.id)
+      return data
+    },
+  })
+
+  const mutateLikeToggle = useMutation({
+    mutationFn: async () => {
+      if (likedId?.[0]) {
+        // 현재 isLiked가 true라면
+        // like 컬렉션에서 문서 삭제
+        await deleteDoc(doc(db, 'liked', likedId?.[0]))
+        // 피드 문서 업데이트
+        const feedRef = doc(db, 'feed', id)
+        await updateDoc(feedRef, {
+          likeCount: increment(-1),
+        })
+      } else {
+        // 현재 isLiked가 false 라면
+        // like 컬렉션에 문서 생성
+        const likedRef = doc(collection(db, 'liked'))
+        const likedData = {
+          userId: loginUser,
+          feedId: id,
+          createdAt: new Date(),
+        }
+        await setDoc(likedRef, likedData)
+        // 피드 문서 업데이트
+        const feedRef = doc(db, 'feed', id)
+        await updateDoc(feedRef, {
+          likeCount: increment(1),
+        })
+      }
+    },
+    onMutate: () => {
+      setLastVisible(undefined)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['feedData'],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['liked'],
+      })
+    },
+  })
+
   useEffect(() => {
     getUserInfo(data.userId)
     nowLoginUser()
@@ -147,8 +206,12 @@ const PostCard = ({ id, data }: { id: string; data: Post }) => {
           <span>{data.commentCount}</span>
         </div>
         <div className='flex items-center gap-1'>
-          <button type='button'>
-            <Icon name='Heart' />
+          <button type='button' onClick={() => mutateLikeToggle.mutate()}>
+            {likedId?.[0] ? (
+              <Icon name='Heart' className='text-red-500 fill-red-500' />
+            ) : (
+              <Icon name='Heart' />
+            )}
           </button>
           <span>{data.likeCount}</span>
         </div>
