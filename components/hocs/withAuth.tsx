@@ -15,11 +15,19 @@ const withAuth =
     useEffect(() => {
       onAuthStateChanged(auth, async (user) => {
         if (user) {
-          if (pathName === '/login' || pathName === '/signup') {
+          if (
+            pathName === '/login' ||
+            pathName === '/signup' ||
+            pathName === '/'
+          ) {
             router.push('/feed')
           }
         } else {
-          if (pathName !== '/login' && pathName !== '/signup') {
+          if (
+            pathName !== '/login' &&
+            pathName !== '/signup' &&
+            pathName === '/'
+          ) {
             router.push('/login')
           }
         }

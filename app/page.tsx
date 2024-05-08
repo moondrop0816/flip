@@ -1,5 +1,6 @@
 'use client'
 
+import withAuth from '@/components/hocs/withAuth'
 import { Button } from '@/components/ui/button'
 import { useRouter } from 'next/navigation'
 
@@ -23,4 +24,4 @@ function Home() {
   )
 }
 
-export default Home
+export default withAuth(Home)
