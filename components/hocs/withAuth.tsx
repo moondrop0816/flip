@@ -26,7 +26,7 @@ const withAuth =
           if (
             pathName !== '/login' &&
             pathName !== '/signup' &&
-            pathName === '/'
+            pathName !== '/'
           ) {
             router.push('/login')
           }
