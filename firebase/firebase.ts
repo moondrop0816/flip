@@ -1,7 +1,7 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from 'firebase/app'
 import { getAuth } from 'firebase/auth'
-import { getFirestore } from 'firebase/firestore'
+import { collection, getFirestore } from 'firebase/firestore'
 import { getStorage } from 'firebase/storage'
 
 // Your web app's Firebase configuration
@@ -19,3 +19,10 @@ const app = initializeApp(firebaseConfig)
 export const auth = getAuth(app)
 export const db = getFirestore(app)
 export const storage = getStorage(app)
+
+// DB
+export const userDB = collection(db, 'user')
+export const feedDB = collection(db, 'feed')
+export const commentDB = collection(db, 'comment')
+export const likedDB = collection(db, 'liked')
+export const followDB = collection(db, 'follow')
