@@ -8,6 +8,8 @@ import Icon from '@/components/icon'
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import withAuth from '@/components/hocs/withAuth'
+import Link from 'next/link'
+import { useLoginUserInfo } from '@/context/loginUserInfoProvider'
 
 const MyPage = () => {
   const path = usePathname()
@@ -16,7 +18,11 @@ const MyPage = () => {
     nickname: '',
     bio: '',
     profileImg: './defaultProfile.png',
+    followerCount: 0,
+    followingCount: 0,
   })
+
+  const { loginUserInfo } = useLoginUserInfo()
 
   const getUserInfo = async (userId: string) => {
     try {
@@ -28,6 +34,8 @@ const MyPage = () => {
         nickname: data.nickname,
         bio: data.bio,
         profileImg: data.profileImg,
+        followerCount: data.followerCount,
+        followingCount: data.followingCount,
       })
     } catch (error) {
       console.error('Error fetching user info:', error)
@@ -46,17 +54,33 @@ const MyPage = () => {
             <img src={userInfo.profileImg} alt='프로필 이미지' />
           </div>
           <div className='flex items-center gap-1'>
-            <Button>
-              <Icon name='Send' className='mr-2 h-4 w-4' />
-              DM
-            </Button>
-            <Button>프로필 수정</Button>
+            {loginUserInfo?.userId === userInfo.userId ? (
+              <Button>프로필 수정</Button>
+            ) : (
+              <Button>
+                <Icon name='Send' className='mr-2 h-4 w-4' />
+                DM
+              </Button>
+              // TODO: 팔로우 버튼 추가해주기
+            )}
           </div>
         </div>
         <p className='text-lg font-bold'>{userInfo.nickname}</p>
         <p className='text-gray-500 mb-2'>{`@${userInfo.userId}`}</p>
         <p>{userInfo.bio}</p>
+        <div>
+          <div>
+            <span>팔로잉</span>
+            <Link href={'/feed'}>{userInfo.followingCount}</Link>
+          </div>
+          <div>
+            <span>팔로워</span>
+            <Link href={'/feed'}>{userInfo.followerCount}</Link>
+          </div>
+        </div>
       </div>
+      <div>탭버튼</div>
+      <div>게시글 보여줄 영역</div>
     </section>
   )
 }
