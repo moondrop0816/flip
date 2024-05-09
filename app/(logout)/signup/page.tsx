@@ -171,6 +171,8 @@ const SignUp = () => {
       bio: data.bio,
       createdAt: new Date(),
       profileImg: profileImgUrl,
+      followerCount: 0,
+      followingCount: 0,
     })
     alert('가입성공')
     router.push('/feed')
