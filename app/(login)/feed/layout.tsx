@@ -1,6 +1,7 @@
 import Footer from '@/components/layout/footer'
 import Header from '@/components/layout/header'
 import { FeedLastVisibleProvider } from '@/context/feedProvider'
+import { LoginUserInfoProvider } from '@/context/loginUserInfoProvider'
 
 export default function FeedLayout({
   children,
@@ -9,9 +10,11 @@ export default function FeedLayout({
 }>) {
   return (
     <>
-      <Header />
-      <FeedLastVisibleProvider>{children}</FeedLastVisibleProvider>
-      <Footer isAddible={true} />
+      <LoginUserInfoProvider>
+        <Header />
+        <FeedLastVisibleProvider>{children}</FeedLastVisibleProvider>
+        <Footer isAddible={true} />
+      </LoginUserInfoProvider>
     </>
   )
 }
