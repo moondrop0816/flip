@@ -21,14 +21,14 @@ const Header = () => {
         const querySnapshot = await getDocs(q)
         const data = querySnapshot.docs.map((doc) => doc.data())[0]
         setLoginUserInfo({
-          uid: data.uid,
-          userId: data.userId,
-          email: data.email,
-          nickname: data.nickname,
-          bio: data.bio,
-          profileImg: data.profileImg,
-          followerCount: data.followerCount,
-          followingCount: data.followingCount,
+          uid: data?.uid,
+          userId: data?.userId,
+          email: data?.email,
+          nickname: data?.nickname,
+          bio: data?.bio,
+          profileImg: data?.profileImg,
+          followerCount: data?.followerCount,
+          followingCount: data?.followingCount,
         })
       } else {
         setLoginUserInfo(undefined)
@@ -50,7 +50,7 @@ const Header = () => {
     <header className='bg-slate-300 shadow-md flex flex-wrap justify-between items-center px-5 py-3 sticky'>
       <div className='basis-1/3 text-left'>
         <div className='rounded-full overflow-hidden w-10'>
-          <Link href={`/user/${loginUserInfo?.userId}`} scroll={false}>
+          <Link href={`/${loginUserInfo?.userId}`} scroll={false}>
             <img src={loginUserInfo?.profileImg} alt='프로필 이미지' />
           </Link>
         </div>
