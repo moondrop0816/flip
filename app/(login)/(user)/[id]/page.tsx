@@ -16,9 +16,9 @@ const MyPage = () => {
   const { loginUserInfo } = useLoginUserInfo()
 
   const { data: userInfo } = useQuery({
-    queryKey: ['user'],
+    queryKey: ['user', path],
     queryFn: async () => {
-      const userId = path.split('/')[path.split('/').length - 1]
+      const userId = path.slice(1)
       const q = query(userDB, where('userId', '==', userId))
       const querySnapshot = await getDocs(q)
       const data = querySnapshot.docs.map((doc) => ({
@@ -56,11 +56,18 @@ const MyPage = () => {
         <div className='flex justify-start items-center gap-5 mt-2'>
           <div className='flex items-center gap-1'>
             <span className='font-semibold'>팔로잉</span>
-            <Link href={'/feed'}>{userInfo?.data.followingCount}</Link>
+            <Link
+              href={`/${userInfo?.data.userId}/following`}
+              as={`/${userInfo?.data.userId}/following`}
+            >
+              {userInfo?.data.followingCount}
+            </Link>
           </div>
           <div className='flex items-center gap-1'>
             <span className='font-semibold'>팔로워</span>
-            <Link href={'/feed'}>{userInfo?.data.followerCount}</Link>
+            <Link href={`/${userInfo?.data.userId}/follower`}>
+              {userInfo?.data.followerCount}
+            </Link>
           </div>
         </div>
       </div>
