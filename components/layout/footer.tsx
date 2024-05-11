@@ -25,6 +25,15 @@ const Footer = ({ isAddible = false }) => {
             </Link>
           </li>
           <li className='basis-1/4 '>
+            <Link
+              href={'/followingfeed'}
+              scroll={false}
+              className='flex justify-center p-5'
+            >
+              <Icon name='Users' />
+            </Link>
+          </li>
+          <li className='basis-1/4 '>
             <Link href={'/'} scroll={false} className='flex justify-center p-5'>
               <Icon name='Search' />
             </Link>
@@ -32,11 +41,6 @@ const Footer = ({ isAddible = false }) => {
           <li className='basis-1/4 '>
             <Link href={'/'} scroll={false} className='flex justify-center p-5'>
               <Icon name='Mail' />
-            </Link>
-          </li>
-          <li className='basis-1/4 '>
-            <Link href={'/'} scroll={false} className='flex justify-center p-5'>
-              <Icon name='CircleUserRound' />
             </Link>
           </li>
         </ul>
