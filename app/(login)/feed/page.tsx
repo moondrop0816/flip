@@ -81,7 +81,13 @@ function Feed() {
       {data?.pages.map((page, pageIndex) => (
         <React.Fragment key={pageIndex}>
           {page?.map((feedData) => (
-            <PostCard key={feedData.id} id={feedData.id} data={feedData.data} />
+            <PostCard
+              key={feedData.id}
+              id={feedData.id}
+              data={feedData.data}
+              queryKey='feedData'
+              setLastVisible={setLastVisible}
+            />
           ))}
         </React.Fragment>
       ))}

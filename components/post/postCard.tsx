@@ -16,6 +16,7 @@ import {
 import Icon from '../icon'
 import { Post } from '@/types/post'
 import {
+  DocumentData,
   collection,
   deleteDoc,
   doc,
@@ -36,7 +37,19 @@ import { deleteObject, ref } from 'firebase/storage'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useFeedLastVisible } from '@/context/feedProvider'
 
-const PostCard = ({ id, data }: { id: string; data: Post }) => {
+const PostCard = ({
+  id,
+  data,
+  queryKey,
+  setLastVisible,
+}: {
+  id: string
+  data: Post
+  queryKey: string
+  setLastVisible: React.Dispatch<
+    React.SetStateAction<number | DocumentData | undefined>
+  >
+}) => {
   const [userInfo, setUserInfo] = useState<PostInfo>({
     userId: '',
     nickname: '',
@@ -70,7 +83,7 @@ const PostCard = ({ id, data }: { id: string; data: Post }) => {
   }
 
   const queryClient = useQueryClient()
-  const { setLastVisible } = useFeedLastVisible()
+  // const { setLastVisible } = useFeedLastVisible()
   const pathname = usePathname()
   const mutatePostDelete = useMutation({
     mutationFn: async () => {
@@ -84,14 +97,20 @@ const PostCard = ({ id, data }: { id: string; data: Post }) => {
       if (pathname !== '/feed') {
         router.push('/feed')
       }
+      if (pathname !== '/followingFeed') {
+        router.push('/feed')
+      }
     },
     onMutate: () => {
       setLastVisible(undefined)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['feedData'],
+        queryKey: [queryKey],
       })
+      // queryClient.invalidateQueries({
+      //   queryKey: ['feedData'],
+      // })
     },
   })
 
@@ -142,8 +161,11 @@ const PostCard = ({ id, data }: { id: string; data: Post }) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['feedData'],
+        queryKey: [queryKey],
       })
+      // queryClient.invalidateQueries({
+      //   queryKey: ['feedData'],
+      // })
       queryClient.invalidateQueries({
         queryKey: ['liked'],
       })
