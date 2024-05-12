@@ -1,9 +1,9 @@
 import Footer from '@/components/layout/footer'
 import Header from '@/components/layout/header'
-import { FeedLastVisibleProvider } from '@/context/feedProvider'
+import { FollowFeedLastVisibleProvider } from '@/context/followFeedProvider'
 import { LoginUserInfoProvider } from '@/context/loginUserInfoProvider'
 
-export default function PostLayout({
+export default function FollowingFeedLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
@@ -12,10 +12,10 @@ export default function PostLayout({
     <>
       <LoginUserInfoProvider>
         <Header />
-        <FeedLastVisibleProvider>
-          <div className='container pt-8 pb-24'>{children}</div>
-        </FeedLastVisibleProvider>
-        <Footer />
+        <FollowFeedLastVisibleProvider>
+          {children}
+        </FollowFeedLastVisibleProvider>
+        <Footer isAddible={true} />
       </LoginUserInfoProvider>
     </>
   )
