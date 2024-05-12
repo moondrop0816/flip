@@ -3,21 +3,42 @@
 import withAuth from '@/components/hocs/withAuth'
 import PostCard from '@/components/post/postCard'
 import { Post } from '@/types/post'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import {
+  DocumentData,
   collection,
+  doc,
+  getDoc,
   getDocs,
   limit,
   orderBy,
   query,
   startAfter,
+  where,
 } from 'firebase/firestore'
-import { db } from '@/firebase/firebase'
+import { auth, db, followDB, userDB } from '@/firebase/firebase'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { useBottomScrollListener } from 'react-bottom-scroll-listener'
 import { useFollowFeedLastVisible } from '@/context/followFeedProvider'
+import useUser from '@/hooks/auth/useUser'
 
 function FollowingFeed() {
+  const { user, loading } = useUser()
+
+  useEffect(() => {
+    const test = async () => {
+      // 로그인 유저의 팔로잉 목록 가져오기
+      const followQ = query(followDB, where('followerUserId', '==', user?.uid))
+      const followSnap = await getDocs(followQ)
+      const followData = followSnap.docs.map(
+        (doc) => doc.data().followingUserId
+      )
+      console.log(followData)
+      // 유저 아이디 가져오기 -> 수정해야함
+    }
+    test()
+  }, [user])
+
   const { lastVisible, setLastVisible } = useFollowFeedLastVisible()
   const getFeedData = async () => {
     const feedData: { id: string; data: Post }[] = []
