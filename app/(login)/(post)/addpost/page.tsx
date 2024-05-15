@@ -12,18 +12,12 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Textarea } from '@/components/ui/textarea'
+import { useAuth } from '@/context/authProvider'
 import { useFeedLastVisible } from '@/context/feedProvider'
-import { auth, db, storage } from '@/firebase/firebase'
+import { feedDB, storage } from '@/firebase/firebase'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import {
-  collection,
-  doc,
-  getDocs,
-  query,
-  setDoc,
-  where,
-} from 'firebase/firestore'
+import { doc, setDoc } from 'firebase/firestore'
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
@@ -63,16 +57,11 @@ const AddPostPage = () => {
 
   const queryClient = useQueryClient()
   const { setLastVisible } = useFeedLastVisible()
+  const { user } = useAuth()
   const mutatePostAdd = useMutation({
     mutationFn: async (data: z.infer<typeof formSchema>) => {
-      // * TODO: 유저 정보 가져오는 부분 util로 빼서 리팩토링 하기
-      const uid = auth.currentUser?.uid
-      const q = query(collection(db, 'user'), where('uid', '==', uid))
-      const querySnapshot = await getDocs(q)
-      const userData = querySnapshot.docs.map((doc) => doc.data())[0]
-      const feedDB = collection(db, 'feed')
       const postData = {
-        userId: userData.userId,
+        userUid: user?.uid,
         content: data.content,
         commentCount: 0,
         likeCount: 0,
@@ -86,7 +75,7 @@ const AddPostPage = () => {
 
       // 이미지 첨부를 했다면
       if (selectedFile) {
-        const imageRef = ref(storage, `${userData.userId}/${postRef.id}`)
+        const imageRef = ref(storage, `${user?.uid}/${postRef.id}`)
         await uploadBytes(imageRef, selectedFile)
         const downloadURL = await getDownloadURL(imageRef)
         postData.imageUrl = downloadURL

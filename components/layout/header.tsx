@@ -2,38 +2,30 @@
 
 import Link from 'next/link'
 import { Button } from '../ui/button'
-import { onAuthStateChanged, signOut } from 'firebase/auth'
+import { signOut } from 'firebase/auth'
 import { auth, userDB } from '@/firebase/firebase'
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { getDocs, query, where } from 'firebase/firestore'
+import { doc, getDoc } from 'firebase/firestore'
 import { useLoginUserInfo } from '@/context/loginUserInfoProvider'
+import { useAuth } from '@/context/authProvider'
 
 const Header = () => {
   const router = useRouter()
   const { loginUserInfo, setLoginUserInfo } = useLoginUserInfo()
+  const { user } = useAuth()
 
-  const getLoginUser = () => {
-    onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        const uid = user.uid
-        const q = query(userDB, where('uid', '==', uid))
-        const querySnapshot = await getDocs(q)
-        const data = querySnapshot.docs.map((doc) => doc.data())[0]
-        setLoginUserInfo({
-          uid: data?.uid,
-          userId: data?.userId,
-          email: data?.email,
-          nickname: data?.nickname,
-          bio: data?.bio,
-          profileImg: data?.profileImg,
-          followerCount: data?.followerCount,
-          followingCount: data?.followingCount,
-        })
-      } else {
-        setLoginUserInfo(undefined)
-        router.push('/login')
-      }
+  const getLoginUser = async () => {
+    const docRef = doc(userDB, user?.uid)
+    const data = await (await getDoc(docRef)).data()
+    setLoginUserInfo({
+      userId: data?.userId,
+      email: data?.email,
+      nickname: data?.nickname,
+      bio: data?.bio,
+      profileImg: data?.profileImg,
+      followerCount: data?.followerCount,
+      followingCount: data?.followingCount,
     })
   }
 

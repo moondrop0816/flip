@@ -16,8 +16,6 @@ import {
 import Icon from '../icon'
 import { Post } from '@/types/post'
 import {
-  DocumentData,
-  collection,
   deleteDoc,
   doc,
   getDoc,
@@ -28,7 +26,7 @@ import {
   updateDoc,
   where,
 } from 'firebase/firestore'
-import { auth, db, storage } from '@/firebase/firebase'
+import { feedDB, likeDB, storage, userDB } from '@/firebase/firebase'
 import { useEffect, useState } from 'react'
 import { PostInfo } from '@/types/user'
 import { getDate } from '@/utils/postUtil'
@@ -36,91 +34,72 @@ import { usePathname, useRouter } from 'next/navigation'
 import { deleteObject, ref } from 'firebase/storage'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useFeedLastVisible } from '@/context/feedProvider'
+import { useFollowFeedLastVisible } from '@/context/followFeedProvider'
+import { useAuth } from '@/context/authProvider'
 
-const PostCard = ({
-  id,
-  data,
-  queryKey,
-  setLastVisible,
-}: {
-  id: string
-  data: Post
-  queryKey: string
-  setLastVisible: React.Dispatch<
-    React.SetStateAction<number | DocumentData | undefined>
-  >
-}) => {
+const PostCard = ({ id, data }: { id: string; data: Post }) => {
   const [userInfo, setUserInfo] = useState<PostInfo>({
     userId: '',
     nickname: '',
     profileImg: '',
   })
-  const [loginUser, setLoginUser] = useState('')
   const router = useRouter()
 
-  const getUserInfo = async (userId: string) => {
+  const getUserInfo = async (userUid: string) => {
     try {
-      const q = query(collection(db, 'user'), where('userId', '==', userId))
-      const querySnapshot = await getDocs(q)
-      const data = querySnapshot.docs.map((doc) => doc.data())[0]
+      const docRef = doc(userDB, userUid)
+      const docData = await (await getDoc(docRef)).data()
       setUserInfo({
-        userId: data.userId,
-        nickname: data.nickname,
-        profileImg: data.profileImg,
+        userId: docData?.userId,
+        nickname: docData?.nickname,
+        profileImg: docData?.profileImg,
       })
     } catch (error) {
       console.error('Error fetching user info:', error)
     }
   }
 
-  // * TODO: authProvider로 작성하면서 제거하기
-  const nowLoginUser = async () => {
-    const uid = auth.currentUser?.uid
-    const q = query(collection(db, 'user'), where('uid', '==', uid))
-    const querySnapshot = await getDocs(q)
-    const userData = querySnapshot.docs.map((doc) => doc.data())[0]
-    setLoginUser(userData.userId)
-  }
+  const { user } = useAuth()
 
   const queryClient = useQueryClient()
-  // const { setLastVisible } = useFeedLastVisible()
+  const { setLastVisible: setFeedVisible } = useFeedLastVisible()
+  const { setLastVisible: setFollowVisible } = useFollowFeedLastVisible()
   const pathname = usePathname()
+
   const mutatePostDelete = useMutation({
     mutationFn: async () => {
-      await deleteDoc(doc(db, 'feed', id))
+      await deleteDoc(doc(feedDB, id))
       // 이미지가 있다면 이미지도 삭제하기
       if (data.imageUrl) {
-        const imageRef = ref(storage, `${data.userId}/${id}`)
+        const imageRef = ref(storage, `${data.userUid}/${id}`)
         await deleteObject(imageRef)
       }
       // feed에 위치하지 않았을경우에는 리다이렉트 시키기
-      if (pathname !== '/feed') {
-        router.push('/feed')
-      }
-      if (pathname !== '/followingFeed') {
+      if (pathname !== '/feed' && pathname !== '/followingFeed') {
         router.push('/feed')
       }
     },
     onMutate: () => {
-      setLastVisible(undefined)
+      setFeedVisible(undefined)
+      setFollowVisible(undefined)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: [queryKey],
+        queryKey: ['feedData'],
       })
-      // queryClient.invalidateQueries({
-      //   queryKey: ['feedData'],
-      // })
+      queryClient.invalidateQueries({
+        queryKey: ['followFeedData'],
+      })
     },
   })
 
-  const { data: likedId } = useQuery({
-    queryKey: ['liked', id, loginUser],
+  const { data: likeId } = useQuery({
+    queryKey: ['like', id, user?.uid],
     queryFn: async () => {
       const q = query(
-        collection(db, 'liked'),
+        likeDB,
         where('feedId', '==', id),
-        where('userId', '==', loginUser)
+        where('userUid', '==', user?.uid)
       )
       const querySnapshot = await getDocs(q)
       const data = querySnapshot.docs.map((doc) => doc.id)
@@ -130,67 +109,75 @@ const PostCard = ({
 
   const mutateLikeToggle = useMutation({
     mutationFn: async () => {
-      if (likedId?.[0]) {
+      if (likeId?.[0]) {
         // 현재 isLiked가 true라면
         // like 컬렉션에서 문서 삭제
-        await deleteDoc(doc(db, 'liked', likedId?.[0]))
+        await deleteDoc(doc(likeDB, likeId?.[0]))
         // 피드 문서 업데이트
-        const feedRef = doc(db, 'feed', id)
+        const feedRef = doc(feedDB, id)
         await updateDoc(feedRef, {
           likeCount: increment(-1),
         })
       } else {
         // 현재 isLiked가 false 라면
         // like 컬렉션에 문서 생성
-        const likedRef = doc(collection(db, 'liked'))
-        const likedData = {
-          userId: loginUser,
+        const likeRef = doc(likeDB)
+        const likeData = {
+          userUid: user?.uid,
           feedId: id,
           createdAt: new Date(),
         }
-        await setDoc(likedRef, likedData)
+        await setDoc(likeRef, likeData)
         // 피드 문서 업데이트
-        const feedRef = doc(db, 'feed', id)
+        const feedRef = doc(feedDB, id)
         await updateDoc(feedRef, {
           likeCount: increment(1),
         })
       }
     },
     onMutate: () => {
-      setLastVisible(undefined)
+      setFeedVisible(undefined)
+      setFollowVisible(undefined)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: [queryKey],
+        queryKey: ['feedData'],
       })
-      // queryClient.invalidateQueries({
-      //   queryKey: ['feedData'],
-      // })
       queryClient.invalidateQueries({
-        queryKey: ['liked'],
+        queryKey: ['followFeedData'],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['like'],
       })
     },
   })
 
   useEffect(() => {
-    getUserInfo(data.userId)
-    nowLoginUser()
+    getUserInfo(data.userUid)
   }, [])
 
   return (
     <Card>
       <CardHeader className='flex flex-row justify-between'>
         <div className='flex items-center basis-[calc(100%-6rem)]'>
-          <div className='w-10 h-10 rounded-full overflow-hidden'>
+          <div
+            className='w-10 h-10 rounded-full overflow-hidden cursor-pointer'
+            onClick={() => router.push(`/${userInfo.userId}`)}
+          >
             <img src={userInfo.profileImg} alt='프로필 이미지' />
           </div>
-          <p className='ml-2 text-lg font-medium'>{userInfo.nickname}</p>
+          <p
+            className='ml-2 text-lg font-medium cursor-pointer'
+            onClick={() => router.push(`/${userInfo.userId}`)}
+          >
+            {userInfo.nickname}
+          </p>
           <CardDescription className='ml-1'>
             ‧ {getDate(data.createdAt)}
           </CardDescription>
         </div>
         <div className='basis-6'>
-          {loginUser === data.userId && (
+          {user?.uid === data.userUid && (
             <DropdownMenu>
               <DropdownMenuTrigger>
                 <Icon name='Ellipsis' />
@@ -229,7 +216,7 @@ const PostCard = ({
         </div>
         <div className='flex items-center gap-1'>
           <button type='button' onClick={() => mutateLikeToggle.mutate()}>
-            {likedId?.[0] ? (
+            {likeId?.[0] ? (
               <Icon name='Heart' className='text-red-500 fill-red-500' />
             ) : (
               <Icon name='Heart' />

@@ -2,15 +2,8 @@
 
 import { useForm, SubmitHandler } from 'react-hook-form'
 import { createUserWithEmailAndPassword } from 'firebase/auth'
-import { auth, db, storage } from '@/firebase/firebase'
-import {
-  collection,
-  setDoc,
-  doc,
-  where,
-  query,
-  getDocs,
-} from 'firebase/firestore'
+import { auth, storage, userDB } from '@/firebase/firebase'
+import { setDoc, doc, where, query, getDocs } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { useState } from 'react'
 import { UserInfo } from '@/types/user'
@@ -104,10 +97,10 @@ const SignUp = () => {
   const [imgPreview, setImgPreview] = useState('./defaultProfile.png')
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
-  const imageUpload = async (userId: string) => {
+  const imageUpload = async (uid: string) => {
     if (selectedFile) {
       // 선택한 프로필 이미지가 있으면
-      const imageRef = ref(storage, `${userId}/${selectedFile.name}`)
+      const imageRef = ref(storage, `${uid}/${selectedFile.name}`)
       await uploadBytes(imageRef, selectedFile)
       const downloadURL = await getDownloadURL(imageRef)
       return downloadURL
@@ -137,7 +130,7 @@ const SignUp = () => {
     const label = type === 'email' ? '이메일' : '아이디'
     // 유효성 검증을 통과했을때만 중복 검사 실행
     if (!form.getFieldState(type).invalid) {
-      const q = query(collection(db, 'user'), where(type, '==', value))
+      const q = query(userDB, where(type, '==', value))
       const querySnapshot = await getDocs(q)
       const data = querySnapshot.docs.map((doc) => doc.data())[0]
 
@@ -160,11 +153,9 @@ const SignUp = () => {
       data.password
     )
     const uid = credential.user.uid
-    const profileImgUrl = await imageUpload(data.userId)
-    const userDB = collection(db, 'user')
+    const profileImgUrl = await imageUpload(uid)
     const userDoc = doc(userDB, uid)
     await setDoc(userDoc, {
-      uid: uid,
       userId: data.userId,
       email: data.email,
       nickname: data.nickname,
