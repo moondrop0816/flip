@@ -39,6 +39,11 @@ const EditPostPage = () => {
   const path = usePathname()
   const postId = path.split('/')[path.split('/').length - 1]
 
+  const router = useRouter()
+  const [imgPreview, setImgPreview] = useState('')
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [prevData, setPrevData] = useState<Post | null>(null)
+
   const form = useForm<z.infer<typeof formSchema>>({
     mode: 'onBlur',
     resolver: zodResolver(formSchema),
@@ -47,28 +52,11 @@ const EditPostPage = () => {
     },
   })
 
-  const router = useRouter()
-  const [imgPreview, setImgPreview] = useState('') // TODO: 이미지 가져와서 세팅하기
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [prevData, setPrevData] = useState<Post | null>(null)
-
-  const fileChange = (fileBlob: File) => {
-    const reader = new FileReader()
-    reader.readAsDataURL(fileBlob)
-    setSelectedFile(fileBlob)
-    return new Promise((resolve) => {
-      reader.onload = () => {
-        setImgPreview(reader.result as string)
-        resolve(null)
-      }
-    })
-  }
-
   const getPostInfo = async (postId: string) => {
     const docRef = doc(db, 'feed', postId)
     const docSnap = await getDoc(docRef)
     const data: Post = {
-      userId: docSnap.data()?.userId,
+      userUid: docSnap.data()?.userUid,
       content: docSnap.data()?.content,
       commentCount: docSnap.data()?.commentCount,
       likeCount: docSnap.data()?.likeCount,
@@ -83,13 +71,29 @@ const EditPostPage = () => {
     }
   }
 
+  const fileChange = (fileBlob: File) => {
+    const reader = new FileReader()
+    reader.readAsDataURL(fileBlob)
+    setSelectedFile(fileBlob)
+    // 이미지를 선택할 때 기존 텍스트 값을 변경하지 않도록 설정
+    if (!form.getValues('content')) {
+      form.setValue('content', prevData?.content || '')
+    }
+    return new Promise((resolve) => {
+      reader.onload = () => {
+        setImgPreview(reader.result as string)
+        resolve(null)
+      }
+    })
+  }
+
   const queryClient = useQueryClient()
   const { setLastVisible } = useFeedLastVisible()
   const mutatePostEdit = useMutation({
     mutationFn: async (data: z.infer<typeof formSchema>) => {
       const docRef = doc(db, 'feed', postId)
       const updateData: {
-        content: string
+        content: string | undefined
         updatedAt: Date
         imageUrl?: string
       } = {
@@ -97,9 +101,14 @@ const EditPostPage = () => {
         updatedAt: new Date(),
       }
 
+      // 텍스트가 수정되지 않았다면
+      if (data.content === '') {
+        updateData.content = prevData?.content
+      }
+
       // 이미지가 새로 변경되었다면
       if (selectedFile) {
-        const imageRef = ref(storage, `${prevData?.userId}/${postId}`)
+        const imageRef = ref(storage, `${prevData?.userUid}/${postId}`)
         await uploadBytes(imageRef, selectedFile)
         const downloadURL = await getDownloadURL(imageRef)
         updateData['imageUrl'] = downloadURL
@@ -108,7 +117,7 @@ const EditPostPage = () => {
       // 기존 이미지가 삭제되었다면
       if (!imgPreview && !selectedFile) {
         updateData['imageUrl'] = ''
-        const imageRef = ref(storage, `${prevData?.userId}/${postId}`)
+        const imageRef = ref(storage, `${prevData?.userUid}/${postId}`)
         await deleteObject(imageRef)
       }
 
@@ -131,6 +140,7 @@ const EditPostPage = () => {
 
   useEffect(() => {
     getPostInfo(postId)
+    form.setValue('content', prevData?.content || '')
   }, [])
 
   return (
