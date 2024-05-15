@@ -9,7 +9,7 @@ const getPostInfo = async (postId: string) => {
   const docRef = doc(db, 'feed', postId)
   const docSnap = await getDoc(docRef)
   const data: Post = {
-    userId: docSnap.data()?.userId,
+    userUid: docSnap.data()?.userUid,
     content: docSnap.data()?.content,
     commentCount: docSnap.data()?.commentCount,
     likeCount: docSnap.data()?.likeCount,

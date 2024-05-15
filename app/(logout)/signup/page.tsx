@@ -104,10 +104,10 @@ const SignUp = () => {
   const [imgPreview, setImgPreview] = useState('./defaultProfile.png')
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
-  const imageUpload = async (userId: string) => {
+  const imageUpload = async (uid: string) => {
     if (selectedFile) {
       // 선택한 프로필 이미지가 있으면
-      const imageRef = ref(storage, `${userId}/${selectedFile.name}`)
+      const imageRef = ref(storage, `${uid}/${selectedFile.name}`)
       await uploadBytes(imageRef, selectedFile)
       const downloadURL = await getDownloadURL(imageRef)
       return downloadURL
@@ -160,11 +160,10 @@ const SignUp = () => {
       data.password
     )
     const uid = credential.user.uid
-    const profileImgUrl = await imageUpload(data.userId)
+    const profileImgUrl = await imageUpload(uid)
     const userDB = collection(db, 'user')
     const userDoc = doc(userDB, uid)
     await setDoc(userDoc, {
-      uid: uid,
       userId: data.userId,
       email: data.email,
       nickname: data.nickname,

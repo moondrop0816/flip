@@ -36,6 +36,8 @@ import {
 } from '@tanstack/react-query'
 import { useBottomScrollListener } from 'react-bottom-scroll-listener'
 import { useReplyLastVisible } from '@/context/replyProvider'
+import useUser from '@/hooks/auth/useUser'
+import { useAuth } from '@/context/authProvider'
 
 const formSchema = z.object({
   content: z.string({
@@ -82,7 +84,7 @@ const ReplyWrapper = ({ feedId }: { feedId: string }) => {
       commentData.push({
         id: doc.id,
         data: {
-          userId: doc.data().userId,
+          userUid: doc.data().userUid,
           content: doc.data().content,
           createdAt: doc.data().createdAt.toDate(),
           feedId: doc.data().feedId,
@@ -119,15 +121,18 @@ const ReplyWrapper = ({ feedId }: { feedId: string }) => {
   }
 
   const queryClient = useQueryClient()
+  // const { user } = useUser()
+  const { user } = useAuth()
   const commentAdd = useMutation({
     mutationFn: async (data: z.infer<typeof formSchema>) => {
-      const uid = auth.currentUser?.uid
-      const q = query(collection(db, 'user'), where('uid', '==', uid))
-      const querySnapshot = await getDocs(q)
-      const userData = querySnapshot.docs.map((doc) => doc.data())[0]
+      // const uid = auth.currentUser?.uid
+      // const q = query(collection(db, 'user'), where('uid', '==', uid))
+      // const querySnapshot = await getDocs(q)
+      // const userData = querySnapshot.docs.map((doc) => doc.data())[0]
+
       const commentDB = collection(db, 'comment')
       const commentData = {
-        userId: userData.userId,
+        userUid: user?.uid,
         feedId,
         content: data.content,
         createdAt: new Date(),

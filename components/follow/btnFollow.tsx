@@ -14,13 +14,15 @@ import {
 } from 'firebase/firestore'
 import { followDB, userDB } from '@/firebase/firebase'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useAuth } from '@/context/authProvider'
 
 export const BtnFollow = ({
   followingUserUid,
 }: {
   followingUserUid: string | undefined
 }) => {
-  const { loginUserInfo } = useLoginUserInfo()
+  // const { loginUserInfo } = useLoginUserInfo()
+  const { user } = useAuth()
   const queryClient = useQueryClient()
   // 팔로우 로직 정리
   // 버튼의 조건부 렌더링
@@ -29,11 +31,11 @@ export const BtnFollow = ({
   // 이 사용자가 로그인한 유저의 팔로잉 목록에 있다 => 언팔로우 버튼
 
   const { data: isFollowing } = useQuery({
-    queryKey: ['isFollowing', loginUserInfo?.uid, followingUserUid],
+    queryKey: ['isFollowing', user?.uid, followingUserUid],
     queryFn: async () => {
       const q = query(
         followDB,
-        where('followerUserId', '==', loginUserInfo?.uid),
+        where('followerUserId', '==', user?.uid),
         where('followingUserId', '==', followingUserUid)
       )
       const querySnapshot = await getDocs(q)
@@ -48,7 +50,7 @@ export const BtnFollow = ({
   const mutateFollow = useMutation({
     mutationFn: async () => {
       // 내 문서 찾기
-      const myDoc = doc(userDB, loginUserInfo?.uid)
+      const myDoc = doc(userDB, user?.uid)
       // 상대 문서 찾기
       const followingDoc = doc(userDB, followingUserUid)
       // 팔로우 디비 문서 생성(자동 아이디)
@@ -56,7 +58,7 @@ export const BtnFollow = ({
       // 팔로우 디비 문서 수정(uid 추가)
       // 팔로우 = 내가 상대의 팔로워가 됨
       await setDoc(followRef, {
-        followerUserId: loginUserInfo?.uid,
+        followerUserId: user?.uid,
         followingUserId: followingUserUid,
       })
       // 내 문서 팔로잉 증가
@@ -85,13 +87,13 @@ export const BtnFollow = ({
   const mutateUnfollow = useMutation({
     mutationFn: async () => {
       // 내 문서 찾기
-      const myDoc = doc(userDB, loginUserInfo?.uid)
+      const myDoc = doc(userDB, user?.uid)
       // 상대 문서 찾기
       const followingDoc = doc(userDB, followingUserUid)
       // 팔로우 디비 문서 삭제
       const q = query(
         followDB,
-        where('followerUserId', '==', loginUserInfo?.uid),
+        where('followerUserId', '==', user?.uid),
         where('followingUserId', '==', followingUserUid)
       )
       const querySnapshot = await getDocs(q)

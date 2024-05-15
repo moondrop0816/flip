@@ -41,7 +41,7 @@ function Feed() {
       feedData.push({
         id: doc.id,
         data: {
-          userId: doc.data().userId,
+          userUid: doc.data().userUid,
           content: doc.data().content,
           commentCount: doc.data().commentCount,
           likeCount: doc.data().likeCount,
@@ -81,13 +81,7 @@ function Feed() {
       {data?.pages.map((page, pageIndex) => (
         <React.Fragment key={pageIndex}>
           {page?.map((feedData) => (
-            <PostCard
-              key={feedData.id}
-              id={feedData.id}
-              data={feedData.data}
-              queryKey='feedData'
-              setLastVisible={setLastVisible}
-            />
+            <PostCard key={feedData.id} id={feedData.id} data={feedData.data} />
           ))}
         </React.Fragment>
       ))}

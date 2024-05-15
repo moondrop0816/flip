@@ -17,15 +17,19 @@ const FollowerPage = () => {
     const userId = pathname.split('/')[1]
     const userQ = query(userDB, where('userId', '==', userId))
     const userSnapshot = await getDocs(userQ)
-    const userDoc = userSnapshot.docs.map((doc) => doc.data())[0]
+    const userDoc = userSnapshot.docs.map((doc) => ({
+      id: doc.id,
+      data: doc.data(),
+    }))[0]
 
     // 현재 유저를 팔로잉하는 리스트 가져오기
-    const q = query(followDB, where('followingUserId', '==', userDoc.uid))
+    const q = query(followDB, where('followingUserId', '==', userDoc.id))
     const querySnapshot = await getDocs(q)
     const data = querySnapshot.docs.map((doc) => ({
       followingUserId: doc.data().followingUserId,
       followerUserId: doc.data().followerUserId,
     }))
+
     setFollowerList(data)
   }
 
@@ -36,15 +40,19 @@ const FollowerPage = () => {
   return (
     <div>
       <h2 className='text-xl font-semibold'>팔로워</h2>
-      {followerList.map(({ followerUserId }) => {
-        return (
-          <UserCard
-            key={followerUserId}
-            type='follower'
-            followerUserId={followerUserId}
-          />
-        )
-      })}
+      {followerList.length !== 0 ? (
+        followerList.map(({ followerUserId }) => {
+          return (
+            <UserCard
+              key={followerUserId}
+              type='follower'
+              followerUserId={followerUserId}
+            />
+          )
+        })
+      ) : (
+        <div>팔로워가 존재하지 않습니다.</div>
+      )}
     </div>
   )
 }

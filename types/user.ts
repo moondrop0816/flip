@@ -1,7 +1,6 @@
 import React from 'react'
 
 export interface UserInfo {
-  uid?: string
   userId: string
   email: string
   password: string
@@ -27,7 +26,6 @@ export type MypageInfo = Pick<
 export type PostInfo = Pick<UserInfo, 'userId' | 'nickname' | 'profileImg'>
 export type CurrentLoginUserInfo = Pick<
   UserInfo,
-  | 'uid'
   | 'userId'
   | 'email'
   | 'nickname'

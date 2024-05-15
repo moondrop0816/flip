@@ -1,7 +1,7 @@
 import { DocumentData } from 'firebase/firestore'
 
 export interface Post {
-  userId: string
+  userUid: string
   content: string
   commentCount: number
   likeCount: number
@@ -11,7 +11,7 @@ export interface Post {
 }
 
 export interface Comment {
-  userId: string
+  userUid: string
   feedId: string
   createdAt: Date
   content: string
