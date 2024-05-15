@@ -3,12 +3,9 @@
 import withAuth from '@/components/hocs/withAuth'
 import PostCard from '@/components/post/postCard'
 import { Post } from '@/types/post'
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import {
-  DocumentData,
   collection,
-  doc,
-  getDoc,
   getDocs,
   limit,
   orderBy,
@@ -16,32 +13,24 @@ import {
   startAfter,
   where,
 } from 'firebase/firestore'
-import { auth, db, followDB, userDB } from '@/firebase/firebase'
+import { db, followDB } from '@/firebase/firebase'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { useBottomScrollListener } from 'react-bottom-scroll-listener'
 import { useFollowFeedLastVisible } from '@/context/followFeedProvider'
-import useUser from '@/hooks/auth/useUser'
+import { useAuth } from '@/context/authProvider'
 
 function FollowingFeed() {
-  const { user, loading } = useUser()
-
-  useEffect(() => {
-    const test = async () => {
-      // 로그인 유저의 팔로잉 목록 가져오기
-      const followQ = query(followDB, where('followerUserId', '==', user?.uid))
-      const followSnap = await getDocs(followQ)
-      const followData = followSnap.docs.map(
-        (doc) => doc.data().followingUserId
-      )
-      console.log(followData)
-      // 유저 아이디 가져오기 -> 수정해야함
-    }
-    test()
-  }, [user])
-
   const { lastVisible, setLastVisible } = useFollowFeedLastVisible()
+  const { user } = useAuth()
+  console.log('last', lastVisible)
+
   const getFeedData = async () => {
     const feedData: { id: string; data: Post }[] = []
+
+    const followQ = query(followDB, where('followerUserId', '==', user?.uid))
+    const followSnap = await getDocs(followQ)
+    const followData = followSnap.docs.map((doc) => doc.data().followingUserId)
+    followData.push(user?.uid)
 
     let q
     if (lastVisible === -1) {
@@ -49,12 +38,18 @@ function FollowingFeed() {
     } else if (lastVisible) {
       q = query(
         collection(db, 'feed'),
+        where('userUid', 'in', followData),
         orderBy('createdAt', 'desc'),
         limit(5),
         startAfter(lastVisible)
       )
     } else {
-      q = query(collection(db, 'feed'), orderBy('createdAt', 'desc'), limit(10))
+      q = query(
+        collection(db, 'feed'),
+        where('userUid', 'in', followData),
+        orderBy('createdAt', 'desc'),
+        limit(10)
+      )
     }
 
     const querySnapshot = await getDocs(q)
@@ -62,7 +57,7 @@ function FollowingFeed() {
       feedData.push({
         id: doc.id,
         data: {
-          userId: doc.data().userId,
+          userUid: doc.data().userUid,
           content: doc.data().content,
           commentCount: doc.data().commentCount,
           likeCount: doc.data().likeCount,
@@ -102,13 +97,7 @@ function FollowingFeed() {
       {data?.pages.map((page, pageIndex) => (
         <React.Fragment key={pageIndex}>
           {page?.map((feedData) => (
-            <PostCard
-              key={feedData.id}
-              id={feedData.id}
-              data={feedData.data}
-              queryKey='followFeedData'
-              setLastVisible={setLastVisible}
-            />
+            <PostCard key={feedData.id} id={feedData.id} data={feedData.data} />
           ))}
         </React.Fragment>
       ))}
