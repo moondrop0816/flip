@@ -1,12 +1,12 @@
 import PostCard from '@/components/post/postCard'
 import ReplyWrapper from '@/components/post/replyWrapper'
-import { db } from '@/firebase/firebase'
+import { feedDB } from '@/firebase/firebase'
 import { ReplyLastVisibleProvider } from '@/context/replyProvider'
 import { Post } from '@/types/post'
 import { doc, getDoc } from 'firebase/firestore'
 
 const getPostInfo = async (postId: string) => {
-  const docRef = doc(db, 'feed', postId)
+  const docRef = doc(feedDB, postId)
   const docSnap = await getDoc(docRef)
   const data: Post = {
     userUid: docSnap.data()?.userUid,

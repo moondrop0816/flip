@@ -5,7 +5,6 @@ import PostCard from '@/components/post/postCard'
 import { Post } from '@/types/post'
 import React from 'react'
 import {
-  collection,
   getDocs,
   limit,
   orderBy,
@@ -13,7 +12,7 @@ import {
   startAfter,
   where,
 } from 'firebase/firestore'
-import { db, followDB } from '@/firebase/firebase'
+import { feedDB, followDB } from '@/firebase/firebase'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { useBottomScrollListener } from 'react-bottom-scroll-listener'
 import { useFollowFeedLastVisible } from '@/context/followFeedProvider'
@@ -22,7 +21,6 @@ import { useAuth } from '@/context/authProvider'
 function FollowingFeed() {
   const { lastVisible, setLastVisible } = useFollowFeedLastVisible()
   const { user } = useAuth()
-  console.log('last', lastVisible)
 
   const getFeedData = async () => {
     const feedData: { id: string; data: Post }[] = []
@@ -37,7 +35,7 @@ function FollowingFeed() {
       return
     } else if (lastVisible) {
       q = query(
-        collection(db, 'feed'),
+        feedDB,
         where('userUid', 'in', followData),
         orderBy('createdAt', 'desc'),
         limit(5),
@@ -45,7 +43,7 @@ function FollowingFeed() {
       )
     } else {
       q = query(
-        collection(db, 'feed'),
+        feedDB,
         where('userUid', 'in', followData),
         orderBy('createdAt', 'desc'),
         limit(10)

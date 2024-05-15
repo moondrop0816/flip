@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/form'
 import { Textarea } from '@/components/ui/textarea'
 import { useFeedLastVisible } from '@/context/feedProvider'
-import { db, storage } from '@/firebase/firebase'
+import { feedDB, storage } from '@/firebase/firebase'
 import { Post } from '@/types/post'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -53,7 +53,7 @@ const EditPostPage = () => {
   })
 
   const getPostInfo = async (postId: string) => {
-    const docRef = doc(db, 'feed', postId)
+    const docRef = doc(feedDB, postId)
     const docSnap = await getDoc(docRef)
     const data: Post = {
       userUid: docSnap.data()?.userUid,
@@ -91,7 +91,7 @@ const EditPostPage = () => {
   const { setLastVisible } = useFeedLastVisible()
   const mutatePostEdit = useMutation({
     mutationFn: async (data: z.infer<typeof formSchema>) => {
-      const docRef = doc(db, 'feed', postId)
+      const docRef = doc(feedDB, postId)
       const updateData: {
         content: string | undefined
         updatedAt: Date

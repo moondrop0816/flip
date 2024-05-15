@@ -2,15 +2,8 @@
 
 import { useForm, SubmitHandler } from 'react-hook-form'
 import { createUserWithEmailAndPassword } from 'firebase/auth'
-import { auth, db, storage } from '@/firebase/firebase'
-import {
-  collection,
-  setDoc,
-  doc,
-  where,
-  query,
-  getDocs,
-} from 'firebase/firestore'
+import { auth, storage, userDB } from '@/firebase/firebase'
+import { setDoc, doc, where, query, getDocs } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { useState } from 'react'
 import { UserInfo } from '@/types/user'
@@ -137,7 +130,7 @@ const SignUp = () => {
     const label = type === 'email' ? '이메일' : '아이디'
     // 유효성 검증을 통과했을때만 중복 검사 실행
     if (!form.getFieldState(type).invalid) {
-      const q = query(collection(db, 'user'), where(type, '==', value))
+      const q = query(userDB, where(type, '==', value))
       const querySnapshot = await getDocs(q)
       const data = querySnapshot.docs.map((doc) => doc.data())[0]
 
@@ -161,7 +154,6 @@ const SignUp = () => {
     )
     const uid = credential.user.uid
     const profileImgUrl = await imageUpload(uid)
-    const userDB = collection(db, 'user')
     const userDoc = doc(userDB, uid)
     await setDoc(userDoc, {
       userId: data.userId,

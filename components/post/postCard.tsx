@@ -16,8 +16,6 @@ import {
 import Icon from '../icon'
 import { Post } from '@/types/post'
 import {
-  DocumentData,
-  collection,
   deleteDoc,
   doc,
   getDoc,
@@ -28,7 +26,7 @@ import {
   updateDoc,
   where,
 } from 'firebase/firestore'
-import { auth, db, feedDB, likeDB, storage, userDB } from '@/firebase/firebase'
+import { feedDB, likeDB, storage, userDB } from '@/firebase/firebase'
 import { useEffect, useState } from 'react'
 import { PostInfo } from '@/types/user'
 import { getDate } from '@/utils/postUtil'
@@ -37,7 +35,6 @@ import { deleteObject, ref } from 'firebase/storage'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useFeedLastVisible } from '@/context/feedProvider'
 import { useFollowFeedLastVisible } from '@/context/followFeedProvider'
-import useUser from '@/hooks/auth/useUser'
 import { useAuth } from '@/context/authProvider'
 
 const PostCard = ({ id, data }: { id: string; data: Post }) => {
@@ -46,14 +43,10 @@ const PostCard = ({ id, data }: { id: string; data: Post }) => {
     nickname: '',
     profileImg: '',
   })
-  // const [loginUser, setLoginUser] = useState('')
   const router = useRouter()
 
   const getUserInfo = async (userUid: string) => {
     try {
-      // const q = query(collection(db, 'user'), where('userUid', '==', userUid))
-      // const querySnapshot = await getDocs(q)
-      // const data = querySnapshot.docs.map((doc) => doc.data())[0]
       const docRef = doc(userDB, userUid)
       const docData = await (await getDoc(docRef)).data()
       setUserInfo({
@@ -66,23 +59,16 @@ const PostCard = ({ id, data }: { id: string; data: Post }) => {
     }
   }
 
-  // * TODO: authProvider로 작성하면서 제거하기
-  // const nowLoginUser = async () => {
-  //   const uid = auth.currentUser?.uid
-  //   const q = query(collection(db, 'user'), where('uid', '==', uid))
-  //   const querySnapshot = await getDocs(q)
-  //   const userData = querySnapshot.docs.map((doc) => doc.data())[0]
-  //   setLoginUser(userData.userId)
-  // }
   const { user } = useAuth()
 
   const queryClient = useQueryClient()
   const { setLastVisible: setFeedVisible } = useFeedLastVisible()
   const { setLastVisible: setFollowVisible } = useFollowFeedLastVisible()
   const pathname = usePathname()
+
   const mutatePostDelete = useMutation({
     mutationFn: async () => {
-      await deleteDoc(doc(db, 'feed', id))
+      await deleteDoc(doc(feedDB, id))
       // 이미지가 있다면 이미지도 삭제하기
       if (data.imageUrl) {
         const imageRef = ref(storage, `${data.userUid}/${id}`)
@@ -96,7 +82,6 @@ const PostCard = ({ id, data }: { id: string; data: Post }) => {
     onMutate: () => {
       setFeedVisible(undefined)
       setFollowVisible(undefined)
-      // setLastVisible(undefined)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -105,9 +90,6 @@ const PostCard = ({ id, data }: { id: string; data: Post }) => {
       queryClient.invalidateQueries({
         queryKey: ['followFeedData'],
       })
-      // queryClient.invalidateQueries({
-      //   queryKey: ['feedData'],
-      // })
     },
   })
 
@@ -115,7 +97,7 @@ const PostCard = ({ id, data }: { id: string; data: Post }) => {
     queryKey: ['like', id, user?.uid],
     queryFn: async () => {
       const q = query(
-        collection(db, 'like'),
+        likeDB,
         where('feedId', '==', id),
         where('userUid', '==', user?.uid)
       )
@@ -156,7 +138,6 @@ const PostCard = ({ id, data }: { id: string; data: Post }) => {
     onMutate: () => {
       setFeedVisible(undefined)
       setFollowVisible(undefined)
-      // setLastVisible(undefined)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -173,7 +154,6 @@ const PostCard = ({ id, data }: { id: string; data: Post }) => {
 
   useEffect(() => {
     getUserInfo(data.userUid)
-    // nowLoginUser()
   }, [])
 
   return (

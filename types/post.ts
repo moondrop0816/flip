@@ -17,7 +17,6 @@ export interface Comment {
   content: string
 }
 
-// 타입 정의
 export type LastVisibleContextType = {
   lastVisible: number | DocumentData | undefined
   setLastVisible: React.Dispatch<

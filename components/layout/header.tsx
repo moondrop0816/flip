@@ -2,14 +2,13 @@
 
 import Link from 'next/link'
 import { Button } from '../ui/button'
-import { onAuthStateChanged, signOut } from 'firebase/auth'
+import { signOut } from 'firebase/auth'
 import { auth, userDB } from '@/firebase/firebase'
-import { useContext, useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { doc, getDoc, getDocs, query, where } from 'firebase/firestore'
+import { doc, getDoc } from 'firebase/firestore'
 import { useLoginUserInfo } from '@/context/loginUserInfoProvider'
-import useUser from '@/hooks/auth/useUser'
-import { AuthContext, useAuth } from '@/context/authProvider'
+import { useAuth } from '@/context/authProvider'
 
 const Header = () => {
   const router = useRouter()
@@ -28,29 +27,6 @@ const Header = () => {
       followerCount: data?.followerCount,
       followingCount: data?.followingCount,
     })
-
-    // onAuthStateChanged(auth, async (user) => {
-    //   if (user) {
-    //     const uid = user.uid
-    //     console.log('uid', uid)
-
-    //     const q = query(userDB, where('uid', '==', uid))
-    //     const querySnapshot = await getDocs(q)
-    //     const data = querySnapshot.docs.map((doc) => doc.data())[0]
-    //     setLoginUserInfo({
-    //       userId: data?.userId,
-    //       email: data?.email,
-    //       nickname: data?.nickname,
-    //       bio: data?.bio,
-    //       profileImg: data?.profileImg,
-    //       followerCount: data?.followerCount,
-    //       followingCount: data?.followingCount,
-    //     })
-    //   } else {
-    //     setLoginUserInfo(undefined)
-    //     router.push('/login')
-    //   }
-    // })
   }
 
   const onLogout = async () => {

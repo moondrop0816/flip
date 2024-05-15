@@ -2,17 +2,8 @@
 
 import { Comment } from '@/types/post'
 import { getDate } from '@/utils/postUtil'
-import { db, auth, userDB } from '@/firebase/firebase'
-import {
-  query,
-  collection,
-  where,
-  getDocs,
-  doc,
-  updateDoc,
-  deleteDoc,
-  getDoc,
-} from 'firebase/firestore'
+import { commentDB, userDB } from '@/firebase/firebase'
+import { doc, updateDoc, deleteDoc, getDoc } from 'firebase/firestore'
 import { useEffect, useRef, useState } from 'react'
 import { PostInfo } from '@/types/user'
 import {
@@ -26,7 +17,6 @@ import { Textarea } from '../ui/textarea'
 import { Button } from '../ui/button'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useReplyLastVisible } from '@/context/replyProvider'
-import useUser from '@/hooks/auth/useUser'
 import { useAuth } from '@/context/authProvider'
 
 const Reply = ({ id, data }: { id: string; data: Comment }) => {
@@ -36,15 +26,12 @@ const Reply = ({ id, data }: { id: string; data: Comment }) => {
     nickname: '',
     profileImg: '',
   })
-  // const [loginUser, setLoginUser] = useState('')
+
   const [isEdit, setIsEdit] = useState(false)
   const content = useRef<HTMLTextAreaElement>(null)
 
   const getUserInfo = async (userUid: string) => {
     try {
-      // const q = query(collection(db, 'user'), where('userId', '==', userId))
-      // const querySnapshot = await getDocs(q)
-      // const data = querySnapshot.docs.map((doc) => doc.data())[0]
       const docRef = doc(userDB, userUid)
       const docData = await (await getDoc(docRef)).data()
       setUserInfo({
@@ -57,17 +44,7 @@ const Reply = ({ id, data }: { id: string; data: Comment }) => {
     }
   }
 
-  // * TODO: authProvider로 작성하면서 제거하기
-  // const nowLoginUser = async () => {
-  //   const uid = auth.currentUser?.uid
-  //   const q = query(collection(db, 'user'), where('uid', '==', uid))
-  //   const querySnapshot = await getDocs(q)
-  //   const userData = querySnapshot.docs.map((doc) => doc.data())[0]
-  //   setLoginUser(userData.userId)
-  // }
-
   const { setLastVisible } = useReplyLastVisible()
-  // const { user } = useUser()
   const { user } = useAuth()
 
   const commentEdit = useMutation({
@@ -79,7 +56,7 @@ const Reply = ({ id, data }: { id: string; data: Comment }) => {
       }
 
       if (content.current?.value !== '') {
-        const docRef = doc(db, 'comment', id)
+        const docRef = doc(commentDB, id)
         await updateDoc(docRef, { content: content.current?.value })
         setIsEdit(false)
       }
@@ -96,7 +73,7 @@ const Reply = ({ id, data }: { id: string; data: Comment }) => {
 
   const commentDelete = useMutation({
     mutationFn: async () => {
-      await deleteDoc(doc(db, 'comment', id))
+      await deleteDoc(doc(commentDB, id))
     },
     onMutate: () => {
       setLastVisible(undefined)
@@ -110,7 +87,6 @@ const Reply = ({ id, data }: { id: string; data: Comment }) => {
 
   useEffect(() => {
     getUserInfo(data.userUid)
-    // nowLoginUser()
   }, [])
 
   return (

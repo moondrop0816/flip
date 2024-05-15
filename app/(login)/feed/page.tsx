@@ -4,15 +4,8 @@ import withAuth from '@/components/hocs/withAuth'
 import PostCard from '@/components/post/postCard'
 import { Post } from '@/types/post'
 import React from 'react'
-import {
-  collection,
-  getDocs,
-  limit,
-  orderBy,
-  query,
-  startAfter,
-} from 'firebase/firestore'
-import { db } from '@/firebase/firebase'
+import { getDocs, limit, orderBy, query, startAfter } from 'firebase/firestore'
+import { feedDB } from '@/firebase/firebase'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { useBottomScrollListener } from 'react-bottom-scroll-listener'
 import { useFeedLastVisible } from '@/context/feedProvider'
@@ -27,13 +20,13 @@ function Feed() {
       return
     } else if (lastVisible) {
       q = query(
-        collection(db, 'feed'),
+        feedDB,
         orderBy('createdAt', 'desc'),
         limit(5),
         startAfter(lastVisible)
       )
     } else {
-      q = query(collection(db, 'feed'), orderBy('createdAt', 'desc'), limit(10))
+      q = query(feedDB, orderBy('createdAt', 'desc'), limit(10))
     }
 
     const querySnapshot = await getDocs(q)

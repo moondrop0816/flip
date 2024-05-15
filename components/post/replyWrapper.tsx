@@ -13,10 +13,9 @@ import { Textarea } from '../ui/textarea'
 import Reply from './reply'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { auth, db } from '@/firebase/firebase'
+import { commentDB, feedDB } from '@/firebase/firebase'
 import {
   query,
-  collection,
   where,
   getDocs,
   doc,
@@ -36,7 +35,6 @@ import {
 } from '@tanstack/react-query'
 import { useBottomScrollListener } from 'react-bottom-scroll-listener'
 import { useReplyLastVisible } from '@/context/replyProvider'
-import useUser from '@/hooks/auth/useUser'
 import { useAuth } from '@/context/authProvider'
 
 const formSchema = z.object({
@@ -64,7 +62,7 @@ const ReplyWrapper = ({ feedId }: { feedId: string }) => {
       return
     } else if (lastVisible) {
       q = query(
-        collection(db, 'comment'),
+        commentDB,
         where('feedId', '==', feedId),
         orderBy('createdAt', 'desc'),
         limit(5),
@@ -72,7 +70,7 @@ const ReplyWrapper = ({ feedId }: { feedId: string }) => {
       )
     } else {
       q = query(
-        collection(db, 'comment'),
+        commentDB,
         where('feedId', '==', feedId),
         orderBy('createdAt', 'desc'),
         limit(10)
@@ -121,16 +119,9 @@ const ReplyWrapper = ({ feedId }: { feedId: string }) => {
   }
 
   const queryClient = useQueryClient()
-  // const { user } = useUser()
   const { user } = useAuth()
   const commentAdd = useMutation({
     mutationFn: async (data: z.infer<typeof formSchema>) => {
-      // const uid = auth.currentUser?.uid
-      // const q = query(collection(db, 'user'), where('uid', '==', uid))
-      // const querySnapshot = await getDocs(q)
-      // const userData = querySnapshot.docs.map((doc) => doc.data())[0]
-
-      const commentDB = collection(db, 'comment')
       const commentData = {
         userUid: user?.uid,
         feedId,
@@ -143,7 +134,7 @@ const ReplyWrapper = ({ feedId }: { feedId: string }) => {
       form.resetField('content') // 입력창 초기화
 
       // 피드 문서 업데이트
-      const feedRef = doc(db, 'feed', feedId)
+      const feedRef = doc(feedDB, feedId)
       const feedSnap = await getDoc(feedRef)
       await updateDoc(feedRef, {
         commentCount: feedSnap.data()?.commentCount + 1,
