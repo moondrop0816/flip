@@ -1,5 +1,6 @@
 'use client'
 
+import { UserCard } from '@/components/follow/userCard'
 import Icon from '@/components/icon'
 import { userDB } from '@/firebase/firebase'
 import { getDocs, or, query, where } from 'firebase/firestore'
@@ -7,6 +8,7 @@ import { useState } from 'react'
 
 const SearchPage = () => {
   const [keyword, setKeyword] = useState('')
+  const [searchData, setSearchData] = useState<string[]>([])
   // 1. 버튼 누르면 구현되는 방식으로 먼저 구현
   // 2. 자동완성으로 바꾸기
   const onSearch = async () => {
@@ -17,11 +19,18 @@ const SearchPage = () => {
     // 유저 검색이니까 일단은 닉네임 + 유저 아이디로만 검색되게 하기
     const q = query(
       userDB,
-      or(where('nickname', '==', keyword), where('userId', '==', keyword))
+      or(
+        where('userId', '>=', keyword),
+        where('userId', '<=', keyword + '\uf8ff'),
+        where('nickname', '>=', keyword),
+        where('nickname', '<=', keyword + '\uf8ff')
+      )
     )
     const querySnapshot = await getDocs(q)
-    const data = querySnapshot.docs.map((doc) => doc.data())
+    const data = querySnapshot.docs.map((doc) => doc.id)
     console.log(data)
+
+    setSearchData(data)
   }
 
   return (
@@ -40,7 +49,9 @@ const SearchPage = () => {
         검색
       </button>
       <div>
-        <div>유저 카드</div>
+        {searchData.map((data) => {
+          return <UserCard key={data} userUid={data} />
+        })}
       </div>
     </section>
   )
