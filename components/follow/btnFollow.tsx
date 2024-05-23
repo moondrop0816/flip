@@ -15,21 +15,17 @@ import { followDB, userDB } from '@/firebase/firebase'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/context/authProvider'
 
-export const BtnFollow = ({
-  followingUserUid,
-}: {
-  followingUserUid: string | undefined
-}) => {
+export const BtnFollow = ({ userUid }: { userUid: string | undefined }) => {
   const { user } = useAuth()
   const queryClient = useQueryClient()
 
   const { data: isFollowing } = useQuery({
-    queryKey: ['isFollowing', user?.uid, followingUserUid],
+    queryKey: ['isFollowing', user?.uid, userUid],
     queryFn: async () => {
       const q = query(
         followDB,
         where('followerUserId', '==', user?.uid),
-        where('followingUserId', '==', followingUserUid)
+        where('followingUserId', '==', userUid)
       )
       const querySnapshot = await getDocs(q)
       return querySnapshot
@@ -39,11 +35,11 @@ export const BtnFollow = ({
   const mutateFollow = useMutation({
     mutationFn: async () => {
       const myDoc = doc(userDB, user?.uid)
-      const followingDoc = doc(userDB, followingUserUid)
+      const followingDoc = doc(userDB, userUid)
       const followRef = doc(followDB)
       await setDoc(followRef, {
         followerUserId: user?.uid,
-        followingUserId: followingUserUid,
+        followingUserId: userUid,
       })
       await updateDoc(myDoc, {
         followingCount: increment(1),
@@ -65,11 +61,11 @@ export const BtnFollow = ({
   const mutateUnfollow = useMutation({
     mutationFn: async () => {
       const myDoc = doc(userDB, user?.uid)
-      const followingDoc = doc(userDB, followingUserUid)
+      const followingDoc = doc(userDB, userUid)
       const q = query(
         followDB,
         where('followerUserId', '==', user?.uid),
-        where('followingUserId', '==', followingUserUid)
+        where('followingUserId', '==', userUid)
       )
       const querySnapshot = await getDocs(q)
       const dataId = querySnapshot.docs.map((doc) => doc.id)[0]

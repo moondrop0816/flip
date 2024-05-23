@@ -41,13 +41,7 @@ const FollowingPage = () => {
       <h2 className='text-xl font-semibold'>팔로잉</h2>
       {followingList.length !== 0 ? (
         followingList.map(({ followingUserId }) => {
-          return (
-            <UserCard
-              key={followingUserId}
-              type='following'
-              followingUserId={followingUserId}
-            />
-          )
+          return <UserCard key={followingUserId} userUid={followingUserId} />
         })
       ) : (
         <div>팔로잉이 존재하지 않습니다.</div>
