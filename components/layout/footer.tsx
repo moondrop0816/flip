@@ -34,7 +34,11 @@ const Footer = ({ isAddible = false }) => {
             </Link>
           </li>
           <li className='basis-1/4 '>
-            <Link href={'/'} scroll={false} className='flex justify-center p-5'>
+            <Link
+              href={'/search'}
+              scroll={false}
+              className='flex justify-center p-5'
+            >
               <Icon name='Search' />
             </Link>
           </li>

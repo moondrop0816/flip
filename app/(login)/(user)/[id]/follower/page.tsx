@@ -42,13 +42,7 @@ const FollowerPage = () => {
       <h2 className='text-xl font-semibold'>팔로워</h2>
       {followerList.length !== 0 ? (
         followerList.map(({ followerUserId }) => {
-          return (
-            <UserCard
-              key={followerUserId}
-              type='follower'
-              followerUserId={followerUserId}
-            />
-          )
+          return <UserCard key={followerUserId} userUid={followerUserId} />
         })
       ) : (
         <div>팔로워가 존재하지 않습니다.</div>

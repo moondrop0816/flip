@@ -7,20 +7,11 @@ import { useRouter } from 'next/navigation'
 import { BtnFollow } from './btnFollow'
 import { useAuth } from '@/context/authProvider'
 
-export const UserCard = ({
-  type,
-  followerUserId,
-  followingUserId,
-}: {
-  type: 'following' | 'follower'
-  followerUserId?: string
-  followingUserId?: string
-}) => {
-  const typeUserUid = type === 'following' ? followingUserId : followerUserId
+export const UserCard = ({ userUid }: { userUid: string }) => {
   const { data: userInfo } = useQuery({
-    queryKey: ['user', typeUserUid],
+    queryKey: ['user', userUid],
     queryFn: async () => {
-      const docRef = doc(userDB, typeUserUid)
+      const docRef = doc(userDB, userUid)
       const docSnap = await getDoc(docRef)
       const docData = docSnap.data()
       const docId = docSnap.id
@@ -41,11 +32,12 @@ export const UserCard = ({
         <div className='rounded-full overflow-hidden w-10 h-10'>
           <img src={userInfo?.data?.profileImg} alt='프로필 이미지' />
         </div>
-        <p className='font-medium'>{userInfo?.data?.nickname}</p>
+        <div>
+          <p className='font-medium'>{userInfo?.data?.nickname}</p>
+          <p className='text-sm text-slate-400'>{userInfo?.data?.userId}</p>
+        </div>
       </div>
-      {userInfo?.uid !== user?.uid && (
-        <BtnFollow followingUserUid={followingUserId} />
-      )}
+      {userInfo?.uid !== user?.uid && <BtnFollow userUid={userUid} />}
     </div>
   )
 }
