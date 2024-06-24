@@ -10,6 +10,8 @@ import Link from 'next/link'
 import { useLoginUserInfo } from '@/context/loginUserInfoProvider'
 import { BtnFollow } from '@/components/follow/btnFollow'
 import { useQuery } from '@tanstack/react-query'
+import { ModalProfileEdit } from '@/components/user/modalProfileEdit'
+import { DialogTrigger } from '@/components/ui/dialog'
 
 const MyPage = () => {
   const path = usePathname()
@@ -38,14 +40,16 @@ const MyPage = () => {
           </div>
           <div className='flex items-center gap-1'>
             {loginUserInfo?.userId === userInfo?.data.userId ? (
-              <Button variant={'outline'}>프로필 수정</Button>
+              // <Button variant={'outline'}>프로필 수정</Button>
+              // TODO : 다이얼로그 안쓰는 모달로 변경하기
+              <ModalProfileEdit />
             ) : (
               <>
                 <Button variant={'outline'}>
                   <Icon name='Send' className='mr-2 h-4 w-4' />
                   DM
                 </Button>
-                <BtnFollow followingUserUid={userInfo?.id} />
+                <BtnFollow userUid={userInfo?.id} />
               </>
             )}
           </div>
