@@ -24,16 +24,15 @@ export type MypageInfo = Pick<
   | 'followingCount'
 >
 export type PostInfo = Pick<UserInfo, 'userId' | 'nickname' | 'profileImg'>
-export type CurrentLoginUserInfo = Pick<
-  UserInfo,
-  | 'userId'
-  | 'email'
-  | 'nickname'
-  | 'bio'
-  | 'profileImg'
-  | 'followerCount'
-  | 'followingCount'
->
+export type CurrentLoginUserInfo = {
+  userId?: string
+  email?: string
+  nickname?: string
+  bio?: string
+  profileImg?: string
+  followerCount?: number
+  followingCount?: number
+}
 
 export type LoginUserInfoContextType = {
   loginUserInfo: CurrentLoginUserInfo | undefined
