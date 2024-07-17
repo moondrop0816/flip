@@ -100,7 +100,7 @@ const SignUp = () => {
   const imageUpload = async (uid: string) => {
     if (selectedFile) {
       // 선택한 프로필 이미지가 있으면
-      const imageRef = ref(storage, `${uid}/${selectedFile.name}`)
+      const imageRef = ref(storage, `${uid}/profile`)
       await uploadBytes(imageRef, selectedFile)
       const downloadURL = await getDownloadURL(imageRef)
       return downloadURL
